@@ -1,0 +1,214 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Home, Binoculars, User, Plus } from 'lucide-react';
+import { PostFeed } from './components/PostFeed';
+import { ProfilePage } from './components/ProfilePage';
+import { DiscoverPage } from './components/DiscoverPage';
+import { ThreadView } from './components/ThreadView';
+import { PostComposer } from './components/PostComposer';
+import { SplashScreen } from './components/SplashScreen';
+import { getOrCreateDeviceId } from './device';
+import { getLocation, type Location } from './location';
+import { getFeed, createPost } from './api';
+import { feedPostToPost, FEED_HERD_MAP, COMMUNITY_HERD_MAP, type Post } from './utils';
+export type { Post } from './utils';
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedFeed, setSelectedFeed] = useState('For you');
+  const [showHeader, setShowHeader] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [viewingPost, setViewingPost] = useState<Post | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
+
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [location, setLocation] = useState<Location | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedError, setFeedError] = useState<string | null>(null);
+
+  const feedOptions = ['For you', 'University', 'IPL', 'Bollywood'];
+
+  useEffect(() => {
+    Promise.all([getOrCreateDeviceId(), getLocation()]).then(
+      ([did, loc]) => {
+        setDeviceId(did);
+        setLocation(loc);
+      },
+      (err) => setFeedError(err.message),
+    );
+  }, []);
+
+  const loadFeed = useCallback(async () => {
+    if (!deviceId || !location) return;
+    setFeedLoading(true);
+    setFeedError(null);
+    try {
+      const herdParams = FEED_HERD_MAP[selectedFeed] ?? { herd_type: 'local' };
+      const data = await getFeed({
+        device_id: deviceId,
+        lat: location.lat,
+        lng: location.lng,
+        ...herdParams,
+      });
+      setPosts(data.map(feedPostToPost));
+    } catch (err: any) {
+      setFeedError(err.message);
+    } finally {
+      setFeedLoading(false);
+    }
+  }, [deviceId, location, selectedFeed]);
+
+  useEffect(() => {
+    loadFeed();
+  }, [loadFeed]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setShowHeader(false);
+      } else if (currentScrollY < lastScrollY) {
+        setShowHeader(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (viewingPost) {
+    return (
+      <div className="min-h-screen bg-white max-w-md mx-auto relative">
+        <ThreadView post={viewingPost} deviceId={deviceId} onBack={() => setViewingPost(null)} />
+      </div>
+    );
+  }
+
+  const handleNewPost = async (text: string, community: string) => {
+    if (!deviceId || !location) return;
+    try {
+      const herdParams = COMMUNITY_HERD_MAP[community];
+      if (!herdParams) return;
+      await createPost({
+        device_id: deviceId,
+        content: text,
+        lat: location.lat,
+        lng: location.lng,
+        ...herdParams,
+      });
+      setComposerOpen(false);
+      setActiveTab('home');
+      loadFeed();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-20 max-w-md mx-auto relative">
+      {/* Header */}
+      {activeTab === 'home' && (
+        <div
+          className={`bg-yellow-400 border-b-2 border-black sticky top-0 z-10 transition-transform duration-300 ${
+            showHeader ? 'translate-y-0' : '-translate-y-full'
+          }`}
+        >
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-3 px-4 py-3 min-w-max">
+              {feedOptions.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setSelectedFeed(option)}
+                  className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap active:scale-95 ${
+                    selectedFeed === option
+                      ? 'bg-black text-yellow-400 border-2 border-black'
+                      : 'bg-white text-black border-2 border-black hover:bg-gray-100'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="pb-4">
+        {activeTab === 'home' && selectedFeed === 'University' ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <span className="text-5xl mb-4">🏛️</span>
+            <p className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Rozha One', serif" }}>University Herd</p>
+            <p className="text-gray-500">Coming soon! We're setting this up.</p>
+          </div>
+        ) : activeTab === 'home' && (
+          <PostFeed
+            posts={posts}
+            loading={feedLoading}
+            error={feedError}
+            deviceId={deviceId}
+            onPostClick={(post: Post) => setViewingPost(post)}
+            onRetry={loadFeed}
+          />
+        )}
+        {activeTab === 'discover' && <DiscoverPage />}
+        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} />}
+      </div>
+
+      {/* FAB */}
+      {activeTab === 'home' && !composerOpen && (
+        <button
+          onClick={() => setComposerOpen(true)}
+          className="fixed bottom-24 right-6 z-40 w-14 h-14 bg-black rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+        >
+          <Plus className="w-7 h-7 text-yellow-400" />
+        </button>
+      )}
+
+      {composerOpen && (
+        <PostComposer
+          onClose={() => setComposerOpen(false)}
+          onPost={handleNewPost}
+        />
+      )}
+
+      {/* Bottom Nav */}
+      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 border-t-2 border-black max-w-md mx-auto z-50">
+        <div className="flex justify-around items-center h-16">
+          <button
+            onClick={() => setActiveTab('home')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 ${
+              activeTab === 'home' ? 'text-black' : 'text-gray-700'
+            }`}
+          >
+            <Home className="w-6 h-6" />
+            <span className="text-xs mt-1 font-medium">Home</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('discover')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 ${
+              activeTab === 'discover' ? 'text-black' : 'text-gray-700'
+            }`}
+          >
+            <Binoculars className="w-6 h-6" />
+            <span className="text-xs mt-1 font-medium">Discover</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 ${
+              activeTab === 'profile' ? 'text-black' : 'text-gray-700'
+            }`}
+          >
+            <User className="w-6 h-6" />
+            <span className="text-xs mt-1 font-medium">Profile</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -9,7 +9,7 @@
   --color-bakbak: #F5C800;
   --color-surface: #ffffff;
   --color-muted: #888888;
-  --font-display: 'Rozha One', serif;
+  --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Noto Sans', sans-serif;
 }
 

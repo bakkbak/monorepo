@@ -29,9 +29,9 @@ function useScrollReveal() {
   return { ref, visible };
 }
 
-function PostCard({ post, deviceId, onClick }: { post: Post; deviceId: string | null; onClick: () => void }) {
+function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Post; deviceId: string | null; onClick: () => void; onRepost?: (post: Post) => void; isReposted?: (postId: string) => boolean }) {
   const [vote, setVote] = useState<'up' | 'down' | null>(null);
-  const [reposted, setReposted] = useState(false);
+  const reposted = isReposted?.(post.id) ?? false;
   const [bouncing, setBouncing] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [reported, setReported] = useState(false);
@@ -162,7 +162,7 @@ function PostCard({ post, deviceId, onClick }: { post: Post; deviceId: string | 
 
           <button
             onClick={() => {
-              setReposted(!reposted);
+              onRepost?.(post);
               handleBounce('repost');
             }}
             className={`flex items-center gap-2 transition-colors ${
@@ -189,9 +189,11 @@ interface PostFeedProps {
   deviceId: string | null;
   onPostClick?: (post: Post) => void;
   onRetry?: () => void;
+  onRepost?: (post: Post) => void;
+  isReposted?: (postId: string) => boolean;
 }
 
-export function PostFeed({ posts, loading, error, deviceId, onPostClick, onRetry }: PostFeedProps) {
+export function PostFeed({ posts, loading, error, deviceId, onPostClick, onRetry, onRepost, isReposted }: PostFeedProps) {
   if (loading && posts.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -229,7 +231,7 @@ export function PostFeed({ posts, loading, error, deviceId, onPostClick, onRetry
   return (
     <div className="space-y-3 pt-3">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} deviceId={deviceId} onClick={() => onPostClick?.(post)} />
+        <PostCard key={post.id} post={post} deviceId={deviceId} onClick={() => onPostClick?.(post)} onRepost={onRepost} isReposted={isReposted} />
       ))}
     </div>
   );

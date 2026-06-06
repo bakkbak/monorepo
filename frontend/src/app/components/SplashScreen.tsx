@@ -26,7 +26,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       <div className="text-8xl mb-6 animate-snap-bounce">🙊</div>
       <h1
         className="text-5xl font-bold text-black tracking-tight"
-        style={{ fontFamily: "'Rozha One', serif" }}
+        style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}
       >
         BakBak
       </h1>

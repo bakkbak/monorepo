@@ -105,10 +105,13 @@ def get_feed(
                     p.herd_id,
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                    COALESCE(cc.cnt, 0) AS comment_count
+                    COALESCE(cc.cnt, 0) AS comment_count,
+                    COALESCE(rc.cnt, 0) AS repost_count
                 FROM posts p
                 LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                     ON p.id = cc.post_id
+                LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
+                    ON p.id = rc.post_id
                 WHERE p.herd_id = :herd_id
                   AND p.is_hidden = FALSE
                 ORDER BY score DESC
@@ -133,10 +136,13 @@ def get_feed(
                 p.herd_id,
                 CAST((p.upvotes - p.downvotes) AS FLOAT) /
                 (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                COALESCE(cc.cnt, 0) AS comment_count
+                COALESCE(cc.cnt, 0) AS comment_count,
+                COALESCE(rc.cnt, 0) AS repost_count
             FROM posts p
             LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                 ON p.id = cc.post_id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
+                ON p.id = rc.post_id
             WHERE p.is_hidden = FALSE
               AND p.herd_id IS NOT NULL
             ORDER BY score DESC
@@ -173,10 +179,13 @@ def get_feed(
                     p.herd_id,
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                    COALESCE(cc.cnt, 0) AS comment_count
+                    COALESCE(cc.cnt, 0) AS comment_count,
+                    COALESCE(rc.cnt, 0) AS repost_count
                 FROM posts p
                 LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                     ON p.id = cc.post_id
+                LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
+                    ON p.id = rc.post_id
                 WHERE p.herd_type = 'university'
                   AND p.university_domain = :domain
                   AND p.is_hidden = FALSE
@@ -281,10 +290,13 @@ def get_my_posts(
                 p.downvotes,
                 p.herd_type,
                 p.herd_id,
-                COALESCE(cc.cnt, 0) AS comment_count
+                COALESCE(cc.cnt, 0) AS comment_count,
+                COALESCE(rc.cnt, 0) AS repost_count
             FROM posts p
             LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                 ON p.id = cc.post_id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
+                ON p.id = rc.post_id
             WHERE p.device_id = :device_id
               AND p.is_hidden = FALSE
             ORDER BY p.created_at DESC
@@ -292,6 +304,83 @@ def get_my_posts(
         {"device_id": device_id}
     ).fetchall()
 
+    return [dict(p._mapping) for p in posts]
+
+
+@router.post("/repost")
+def repost_post(
+    post_id: str,
+    device_id: str,
+    db: Session = Depends(get_db),
+):
+    existing = db.execute(
+        text("""
+            SELECT 1 FROM reposts
+            WHERE post_id = :post_id AND device_id = :device_id
+        """),
+        {"post_id": post_id, "device_id": device_id},
+    ).fetchone()
+
+    if existing:
+        return {"status": "already_reposted"}
+
+    db.execute(
+        text("""
+            INSERT INTO reposts (post_id, device_id)
+            VALUES (:post_id, :device_id)
+        """),
+        {"post_id": post_id, "device_id": device_id},
+    )
+    db.commit()
+    return {"status": "reposted"}
+
+
+@router.delete("/repost")
+def unrepost_post(
+    post_id: str,
+    device_id: str,
+    db: Session = Depends(get_db),
+):
+    db.execute(
+        text("""
+            DELETE FROM reposts
+            WHERE post_id = :post_id AND device_id = :device_id
+        """),
+        {"post_id": post_id, "device_id": device_id},
+    )
+    db.commit()
+    return {"status": "unreposted"}
+
+
+@router.get("/reposts")
+def get_my_reposts(
+    device_id: str,
+    db: Session = Depends(get_db),
+):
+    posts = db.execute(
+        text("""
+            SELECT
+                p.id,
+                p.content,
+                p.created_at,
+                p.upvotes,
+                p.downvotes,
+                p.herd_type,
+                p.herd_id,
+                COALESCE(cc.cnt, 0) AS comment_count,
+                COALESCE(rc.cnt, 0) AS repost_count
+            FROM reposts r
+            JOIN posts p ON p.id = r.post_id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
+                ON p.id = cc.post_id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
+                ON p.id = rc.post_id
+            WHERE r.device_id = :device_id
+              AND p.is_hidden = FALSE
+            ORDER BY r.created_at DESC
+        """),
+        {"device_id": device_id},
+    ).fetchall()
     return [dict(p._mapping) for p in posts]
 
 

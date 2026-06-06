@@ -1,5 +1,6 @@
 import { Search, TrendingUp, Flame } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { joinHerd, leaveHerd, getJoinedHerds } from '../api';
 
 const circles = [
   {
@@ -94,21 +95,63 @@ const circles = [
   }
 ];
 
-export function DiscoverPage() {
-  const [joinedCircles, setJoinedCircles] = useState<Record<number, boolean>>({});
+interface DiscoverPageProps {
+  deviceId: string | null;
+  onHerdsChanged?: () => void;
+}
 
-  const handleJoin = (circleId: number) => {
-    setJoinedCircles(prev => ({
-      ...prev,
-      [circleId]: !prev[circleId]
-    }));
+export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
+  const [joinedHerdIds, setJoinedHerdIds] = useState<Set<string>>(new Set());
+
+  // Load joined herds from backend
+  useEffect(() => {
+    if (!deviceId) return;
+    getJoinedHerds(deviceId)
+      .then((ids) => setJoinedHerdIds(new Set(ids)))
+      .catch(() => {});
+  }, [deviceId]);
+
+  const handleJoin = async (circle: typeof circles[0]) => {
+    if (!deviceId) return;
+    const herdId = circle.name.toLowerCase().replace(/\s+/g, '-');
+    const isJoined = joinedHerdIds.has(herdId);
+
+    // Optimistic update
+    setJoinedHerdIds((prev) => {
+      const next = new Set(prev);
+      if (isJoined) next.delete(herdId);
+      else next.add(herdId);
+      return next;
+    });
+
+    try {
+      if (isJoined) {
+        await leaveHerd({ device_id: deviceId, herd_id: herdId });
+      } else {
+        await joinHerd({ device_id: deviceId, herd_id: herdId });
+      }
+      onHerdsChanged?.();
+    } catch {
+      // Rollback
+      setJoinedHerdIds((prev) => {
+        const next = new Set(prev);
+        if (isJoined) next.add(herdId);
+        else next.delete(herdId);
+        return next;
+      });
+    }
+  };
+
+  const isCircleJoined = (circle: typeof circles[0]) => {
+    const herdId = circle.name.toLowerCase().replace(/\s+/g, '-');
+    return joinedHerdIds.has(herdId);
   };
 
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
-        <h1 className="text-4xl font-bold text-black mb-2" style={{ fontFamily: "'Rozha One', serif" }}>Discover</h1>
+        <h1 className="text-4xl font-bold text-black mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>Discover</h1>
         <p className="text-gray-500">find your vibe ✨</p>
       </div>
 
@@ -167,14 +210,14 @@ export function DiscoverPage() {
 
               {/* Join Button */}
               <button
-                onClick={() => handleJoin(circle.id)}
+                onClick={() => handleJoin(circle)}
                 className={`px-5 py-2 rounded-full font-bold text-sm border-2 border-black transition-all flex-shrink-0 ${
-                  joinedCircles[circle.id]
+                  isCircleJoined(circle)
                     ? 'bg-yellow-400 text-black'
                     : 'bg-white text-black hover:bg-gray-50 active:scale-95'
                 }`}
               >
-                {joinedCircles[circle.id] ? '✓ Joined' : 'Join'}
+                {isCircleJoined(circle) ? '✓ Joined' : 'Join'}
               </button>
             </div>
           </div>

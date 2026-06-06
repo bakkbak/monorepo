@@ -10,16 +10,18 @@ type TabType = 'posts' | 'comments' | 'saved';
 interface ProfilePageProps {
   deviceId: string | null;
   onPostClick?: (post: Post) => void;
+  repostedPosts?: Post[];
+  onRepost?: (post: Post) => void;
+  isReposted?: (postId: string) => boolean;
 }
 
-export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
+export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepost, isReposted }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [myComments, setMyComments] = useState<MyComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [postVotes, setPostVotes] = useState<Record<string, 'up' | 'down' | null>>({});
-  const [postReposts, setPostReposts] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!deviceId) return;
@@ -132,8 +134,8 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
     }
   };
 
-  const handleRepost = (postId: string) => {
-    setPostReposts((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  const handleRepost = (post: Post) => {
+    onRepost?.(post);
   };
 
   const getVoteCount = (post: Post) => {
@@ -141,7 +143,7 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
     return post.upvotes - post.downvotes + (userVote === 'up' ? 1 : userVote === 'down' ? -1 : 0);
   };
 
-  const renderPosts = (posts: Post[]) => {
+  const renderPosts = (posts: Post[], reposted: Post[] = []) => {
     if (loading) {
       return (
         <div className="flex items-center justify-center py-16">
@@ -150,7 +152,15 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
       );
     }
 
-    if (posts.length === 0) {
+    // Merge own posts + reposted posts, deduped, reposted ones tagged
+    const ownIds = new Set(posts.map((p) => p.id));
+    const repostOnly = reposted.filter((p) => !ownIds.has(p.id));
+    const allPosts: Array<Post & { _isRepost?: boolean }> = [
+      ...posts.map((p) => ({ ...p, _isRepost: false })),
+      ...repostOnly.map((p) => ({ ...p, _isRepost: true })),
+    ];
+
+    if (allPosts.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
           <p className="text-gray-400 text-lg">Nothing here yet</p>
@@ -159,9 +169,15 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
       );
     }
 
-    return posts.map((post) => (
-      <div key={post.id} className="bg-white rounded-xl border-2 border-black">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+    return allPosts.map((post) => (
+      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white rounded-xl border-2 border-black">
+        {post._isRepost && (
+          <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
+            <Repeat2 className="w-3.5 h-3.5 text-yellow-600" />
+            <span className="text-xs font-medium text-yellow-600">You reposted</span>
+          </div>
+        )}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-3 cursor-pointer" onClick={() => onPostClick?.(post)}>
           <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-lg">
             {communityEmojis[post.community] || '🛠️'}
           </div>
@@ -171,7 +187,7 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
           </div>
         </div>
 
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-3 cursor-pointer" onClick={() => onPostClick?.(post)}>
           <p className="text-black leading-relaxed">{post.content}</p>
         </div>
 
@@ -203,20 +219,20 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
               </button>
             </div>
 
-            <button className="flex items-center gap-1.5 text-gray-600 hover:text-black transition-colors">
+            <button onClick={() => onPostClick?.(post)} className="flex items-center gap-1.5 text-gray-600 hover:text-black transition-colors">
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm font-medium">{post.comments}</span>
             </button>
 
             <button
-              onClick={() => handleRepost(post.id)}
+              onClick={() => handleRepost(post)}
               className={`flex items-center gap-1.5 transition-colors ${
-                postReposts[post.id] ? 'text-yellow-600' : 'text-gray-600 hover:text-yellow-600'
+                isReposted?.(post.id) ? 'text-yellow-600' : 'text-gray-600 hover:text-yellow-600'
               }`}
             >
               <Repeat2 className="w-4 h-4" />
               <span className="text-sm font-medium">
-                {post.reposts + (postReposts[post.id] ? 1 : 0)}
+                {post.reposts + (isReposted?.(post.id) ? 1 : 0)}
               </span>
             </button>
 
@@ -234,7 +250,7 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-start justify-between">
-          <h1 className="text-3xl font-bold text-black leading-tight" style={{ fontFamily: "'Rozha One', serif" }}>
+          <h1 className="text-3xl font-bold text-black leading-tight" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>
             Hey there<br />stranger!
           </h1>
           <button className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors">
@@ -277,7 +293,7 @@ export function ProfilePage({ deviceId, onPostClick }: ProfilePageProps) {
 
       {/* Content */}
       <div className="space-y-4 px-3">
-        {activeTab === 'posts' && renderPosts(myPosts)}
+        {activeTab === 'posts' && renderPosts(myPosts, repostedPosts)}
         {activeTab === 'comments' && renderComments()}
         {activeTab === 'saved' && (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">

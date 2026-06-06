@@ -34,6 +34,7 @@ export type FeedPost = {
   herd_type?: string;
   herd_id?: string;
   comment_count?: number;
+  repost_count?: number;
 };
 
 export async function getFeed(params: {
@@ -142,6 +143,40 @@ export type MyComment = {
 export async function getMyComments(device_id: string) {
   const qs = new URLSearchParams({ device_id });
   return request<MyComment[]>(`/comments/my-comments?${qs}`);
+}
+
+// --- Reposts ---
+
+export async function repostPost(params: { post_id: string; device_id: string }) {
+  const qs = new URLSearchParams({ post_id: params.post_id, device_id: params.device_id });
+  return request<{ status: string }>(`/posts/repost?${qs}`, { method: 'POST' });
+}
+
+export async function unrepostPost(params: { post_id: string; device_id: string }) {
+  const qs = new URLSearchParams({ post_id: params.post_id, device_id: params.device_id });
+  return request<{ status: string }>(`/posts/repost?${qs}`, { method: 'DELETE' });
+}
+
+export async function getMyReposts(device_id: string) {
+  const qs = new URLSearchParams({ device_id });
+  return request<FeedPost[]>(`/posts/reposts?${qs}`);
+}
+
+// --- Herds ---
+
+export async function joinHerd(params: { device_id: string; herd_id: string }) {
+  const qs = new URLSearchParams({ device_id: params.device_id, herd_id: params.herd_id });
+  return request<{ status: string }>(`/herds/join?${qs}`, { method: 'POST' });
+}
+
+export async function leaveHerd(params: { device_id: string; herd_id: string }) {
+  const qs = new URLSearchParams({ device_id: params.device_id, herd_id: params.herd_id });
+  return request<{ status: string }>(`/herds/leave?${qs}`, { method: 'POST' });
+}
+
+export async function getJoinedHerds(device_id: string) {
+  const qs = new URLSearchParams({ device_id });
+  return request<string[]>(`/herds/joined?${qs}`);
 }
 
 // --- Reports ---

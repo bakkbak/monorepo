@@ -82,4 +82,20 @@ def init_db():
                 active BOOLEAN DEFAULT TRUE
             )
         """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS herd_memberships (
+                device_id TEXT NOT NULL REFERENCES devices(id),
+                herd_id TEXT NOT NULL,
+                joined_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (device_id, herd_id)
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS reposts (
+                post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+                device_id TEXT NOT NULL REFERENCES devices(id),
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (post_id, device_id)
+            )
+        """))
         conn.commit()

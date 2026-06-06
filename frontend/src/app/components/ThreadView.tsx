@@ -109,12 +109,14 @@ interface ThreadViewProps {
   post: Post;
   deviceId: string | null;
   onBack: () => void;
+  onRepost?: (post: Post) => void;
+  isReposted?: (postId: string) => boolean;
 }
 
-export function ThreadView({ post, deviceId, onBack }: ThreadViewProps) {
+export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: ThreadViewProps) {
   const [vote, setVote] = useState<'up' | 'down' | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [reposted, setReposted] = useState(false);
+  const reposted = isReposted?.(post.id) ?? false;
   const [comments, setComments] = useState<CommentTree[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -265,7 +267,7 @@ export function ThreadView({ post, deviceId, onBack }: ThreadViewProps) {
             <span className="text-sm font-medium">{totalComments} replies</span>
           </div>
           <button
-            onClick={() => setReposted(!reposted)}
+            onClick={() => onRepost?.(post)}
             className={`flex items-center gap-2 transition-colors ${
               reposted ? 'text-yellow-600' : 'text-gray-600'
             }`}

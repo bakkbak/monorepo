@@ -11,6 +11,100 @@ export type Post = {
   reposts: number;
 };
 
+// Master registry of all herds — single source of truth
+export type HerdInfo = {
+  displayName: string;
+  emoji: string;
+  herdId: string; // backend herd_id
+};
+
+export const HERD_REGISTRY: Record<string, HerdInfo> = {
+  'ipl':             { displayName: 'IPL',             emoji: '🏏', herdId: 'ipl' },
+  'bollywood':       { displayName: 'Bollywood',       emoji: '🎬', herdId: 'bollywood' },
+  'nba':             { displayName: 'NBA',             emoji: '🏀', herdId: 'nba' },
+  'premier-league':  { displayName: 'Premier League',  emoji: '⚽', herdId: 'premier-league' },
+  'rcb':             { displayName: 'RCB',             emoji: '🔥', herdId: 'rcb' },
+  'pokemon':         { displayName: 'Pokemon',         emoji: '⚡', herdId: 'pokemon' },
+  'music':           { displayName: 'Music',           emoji: '🎵', herdId: 'music' },
+  'swifties':        { displayName: 'Swifties',        emoji: '💜', herdId: 'swifties' },
+  'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university' },
+  'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
+};
+
+// Default herds every user gets
+export const DEFAULT_HERD_IDS = ['ipl', 'bollywood'];
+
+// Convert herd_id to display name
+export function herdIdToDisplayName(herdId: string): string {
+  return HERD_REGISTRY[herdId]?.displayName ?? herdId;
+}
+
+// Build feed options from joined herd IDs
+export function buildFeedOptions(joinedHerdIds: string[]): string[] {
+  const tabs = ['For you'];
+  for (const hid of joinedHerdIds) {
+    if (hid === 'university') {
+      tabs.push('University');
+    } else {
+      const info = HERD_REGISTRY[hid];
+      if (info) tabs.push(info.displayName);
+    }
+  }
+  return tabs;
+}
+
+// Build community list for post composer from joined herd IDs
+export function buildCommunities(joinedHerdIds: string[]): string[] {
+  return joinedHerdIds.map((hid) => {
+    const info = HERD_REGISTRY[hid];
+    return info ? info.displayName : hid;
+  });
+}
+
+// Get feed query params for a display name
+export function getFeedParams(displayName: string): { herd_type: string; herd_id?: string } {
+  if (displayName === 'For you') return { herd_type: 'local' };
+  if (displayName === 'University') return { herd_type: 'university' };
+  // Find by display name
+  const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
+  if (entry) return { herd_type: 'global', herd_id: entry.herdId };
+  return { herd_type: 'local' };
+}
+
+// Get post creation params for a community display name
+export function getPostParams(displayName: string): { herd_type: string; herd_id?: string } {
+  if (displayName === 'University') return { herd_type: 'university' };
+  const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
+  if (entry) return { herd_type: 'global', herd_id: entry.herdId };
+  return { herd_type: 'local' };
+}
+
+// Build emoji map from joined herd IDs (plus always include defaults)
+export function buildCommunityEmojis(joinedHerdIds: string[]): Record<string, string> {
+  const emojis: Record<string, string> = {};
+  for (const [, info] of Object.entries(HERD_REGISTRY)) {
+    emojis[info.displayName] = info.emoji;
+  }
+  return emojis;
+}
+
+// Legacy exports — still used by components that import these directly
+export const communityEmojis: Record<string, string> = buildCommunityEmojis([]);
+
+// Legacy static maps — kept for backward compat but prefer the dynamic functions
+export const FEED_HERD_MAP: Record<string, { herd_type?: string; herd_id?: string }> = {
+  'For you': { herd_type: 'local' },
+  'University': { herd_type: 'university' },
+  'IPL': { herd_type: 'local', herd_id: 'ipl' },
+  'Bollywood': { herd_type: 'local', herd_id: 'bollywood' },
+};
+
+export const COMMUNITY_HERD_MAP: Record<string, { herd_type: string; herd_id?: string }> = {
+  'University': { herd_type: 'university' },
+  'IPL': { herd_type: 'local', herd_id: 'ipl' },
+  'Bollywood': { herd_type: 'local', herd_id: 'bollywood' },
+};
+
 export function getTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -26,7 +120,7 @@ export function feedPostToPost(fp: FeedPost): Post {
 
   let community: string;
   if (fp.herd_id) {
-    community = HERD_ID_DISPLAY[fp.herd_id] ?? fp.herd_id;
+    community = herdIdToDisplayName(fp.herd_id);
   } else if (fp.herd_type === 'university') {
     community = 'University';
   } else {
@@ -41,34 +135,6 @@ export function feedPostToPost(fp: FeedPost): Post {
     upvotes: fp.upvotes ?? 0,
     downvotes: fp.downvotes ?? 0,
     comments: fp.comment_count ?? 0,
-    reposts: 0,
+    reposts: fp.repost_count ?? 0,
   };
 }
-
-// Feed tab → backend query params (For you is a curated view, not a community)
-export const FEED_HERD_MAP: Record<string, { herd_type?: string; herd_id?: string }> = {
-  'For you': { herd_type: 'local' },
-  'University': { herd_type: 'university' },
-  'IPL': { herd_type: 'local', herd_id: 'ipl' },
-  'Bollywood': { herd_type: 'local', herd_id: 'bollywood' },
-};
-
-// Community → backend params for post creation (no "For you" — posts must go in a community)
-export const COMMUNITY_HERD_MAP: Record<string, { herd_type: string; herd_id?: string }> = {
-  'University': { herd_type: 'university' },
-  'IPL': { herd_type: 'local', herd_id: 'ipl' },
-  'Bollywood': { herd_type: 'local', herd_id: 'bollywood' },
-};
-
-// Backend herd_id → display name
-const HERD_ID_DISPLAY: Record<string, string> = {
-  'ipl': 'IPL',
-  'bollywood': 'Bollywood',
-};
-
-export const communityEmojis: Record<string, string> = {
-  'IPL': '🏏',
-  'University': '🏛️',
-  'Bollywood': '🎬',
-  'Pokemon': '⚡',
-};

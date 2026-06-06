@@ -8,8 +8,8 @@ import { PostComposer } from './components/PostComposer';
 import { SplashScreen } from './components/SplashScreen';
 import { getOrCreateDeviceId } from './device';
 import { getLocation, type Location } from './location';
-import { getFeed, createPost } from './api';
-import { feedPostToPost, FEED_HERD_MAP, COMMUNITY_HERD_MAP, type Post } from './utils';
+import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd } from './api';
+import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
 export default function App() {
@@ -26,8 +26,84 @@ export default function App() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
+  const [repostedPosts, setRepostedPosts] = useState<Post[]>([]);
+  const [repostedIds, setRepostedIds] = useState<Set<string>>(new Set());
 
-  const feedOptions = ['For you', 'University', 'IPL', 'Bollywood'];
+  // Joined herds
+  const [joinedHerdIds, setJoinedHerdIds] = useState<string[]>([]);
+
+  const feedOptions = buildFeedOptions(joinedHerdIds);
+  const communities = buildCommunities(joinedHerdIds);
+
+  // Load joined herds + auto-join defaults
+  const refreshJoinedHerds = useCallback(async () => {
+    if (!deviceId) return;
+    try {
+      let ids = await getJoinedHerds(deviceId);
+
+      // Auto-join default herds if not already joined
+      const missing = DEFAULT_HERD_IDS.filter((d) => !ids.includes(d));
+      if (missing.length > 0) {
+        await Promise.all(missing.map((hid) => joinHerd({ device_id: deviceId, herd_id: hid })));
+        ids = await getJoinedHerds(deviceId);
+      }
+
+      setJoinedHerdIds(ids);
+    } catch {
+      // Fallback to defaults
+      setJoinedHerdIds(DEFAULT_HERD_IDS);
+    }
+  }, [deviceId]);
+
+  useEffect(() => {
+    refreshJoinedHerds();
+  }, [refreshJoinedHerds]);
+
+  // Load reposts from backend on init
+  useEffect(() => {
+    if (!deviceId) return;
+    getMyReposts(deviceId)
+      .then((data) => {
+        const posts = data.map(feedPostToPost);
+        setRepostedPosts(posts);
+        setRepostedIds(new Set(posts.map((p) => p.id)));
+      })
+      .catch(() => {});
+  }, [deviceId]);
+
+  const handleRepost = async (post: Post) => {
+    if (!deviceId) return;
+    const alreadyReposted = repostedIds.has(post.id);
+
+    // Optimistic update
+    if (alreadyReposted) {
+      setRepostedIds((prev) => { const next = new Set(prev); next.delete(post.id); return next; });
+      setRepostedPosts((prev) => prev.filter((p) => p.id !== post.id));
+    } else {
+      setRepostedIds((prev) => new Set(prev).add(post.id));
+      setRepostedPosts((prev) => [post, ...prev]);
+    }
+
+    try {
+      if (alreadyReposted) {
+        await unrepostPost({ post_id: post.id, device_id: deviceId });
+      } else {
+        await repostPost({ post_id: post.id, device_id: deviceId });
+      }
+      loadFeed();
+    } catch {
+      // Rollback on failure
+      if (alreadyReposted) {
+        setRepostedIds((prev) => new Set(prev).add(post.id));
+        setRepostedPosts((prev) => [post, ...prev]);
+      } else {
+        setRepostedIds((prev) => { const next = new Set(prev); next.delete(post.id); return next; });
+        setRepostedPosts((prev) => prev.filter((p) => p.id !== post.id));
+      }
+    }
+  };
+
+  const isReposted = (postId: string) => repostedIds.has(postId);
 
   useEffect(() => {
     Promise.all([getOrCreateDeviceId(), getLocation()]).then(
@@ -44,7 +120,7 @@ export default function App() {
     setFeedLoading(true);
     setFeedError(null);
     try {
-      const herdParams = FEED_HERD_MAP[selectedFeed] ?? { herd_type: 'local' };
+      const herdParams = getFeedParams(selectedFeed);
       const data = await getFeed({
         device_id: deviceId,
         lat: location.lat,
@@ -85,7 +161,7 @@ export default function App() {
   if (viewingPost) {
     return (
       <div className="min-h-screen bg-white max-w-md mx-auto relative">
-        <ThreadView post={viewingPost} deviceId={deviceId} onBack={() => setViewingPost(null)} />
+        <ThreadView post={viewingPost} deviceId={deviceId} onBack={() => setViewingPost(null)} onRepost={handleRepost} isReposted={isReposted} />
       </div>
     );
   }
@@ -93,7 +169,7 @@ export default function App() {
   const handleNewPost = async (text: string, community: string) => {
     if (!deviceId || !location) return;
     try {
-      const herdParams = COMMUNITY_HERD_MAP[community];
+      const herdParams = getPostParams(community);
       if (!herdParams) return;
       await createPost({
         device_id: deviceId,
@@ -143,7 +219,7 @@ export default function App() {
         {activeTab === 'home' && selectedFeed === 'University' ? (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
             <span className="text-5xl mb-4">🏛️</span>
-            <p className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Rozha One', serif" }}>University Herd</p>
+            <p className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>University Herd</p>
             <p className="text-gray-500">Coming soon! We're setting this up.</p>
           </div>
         ) : activeTab === 'home' && (
@@ -154,10 +230,12 @@ export default function App() {
             deviceId={deviceId}
             onPostClick={(post: Post) => setViewingPost(post)}
             onRetry={loadFeed}
+            onRepost={handleRepost}
+            isReposted={isReposted}
           />
         )}
-        {activeTab === 'discover' && <DiscoverPage />}
-        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} />}
+        {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
+        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} />}
       </div>
 
       {/* FAB */}
@@ -174,6 +252,7 @@ export default function App() {
         <PostComposer
           onClose={() => setComposerOpen(false)}
           onPost={handleNewPost}
+          communities={communities}
         />
       )}
 

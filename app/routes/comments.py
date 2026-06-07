@@ -112,3 +112,55 @@ def create_comment(
     db.commit()
 
     return {"status": "ok", "comment_id": str(comment_id)}
+
+
+@router.post("/vote")
+def vote_comment(
+    comment_id: str,
+    device_id: str,
+    vote: int,
+    db: Session = Depends(get_db)
+):
+    if vote not in (-1, 1):
+        raise HTTPException(status_code=400, detail="Invalid vote")
+
+    banned = db.execute(
+        text("SELECT is_banned FROM devices WHERE id = :id"),
+        {"id": device_id}
+    ).scalar()
+
+    if banned:
+        raise HTTPException(status_code=403, detail="Device banned")
+
+    existing = db.execute(
+        text("""
+            SELECT vote FROM comment_votes
+            WHERE comment_id = :comment_id AND device_id = :device_id
+        """),
+        {"comment_id": comment_id, "device_id": device_id}
+    ).fetchone()
+
+    if existing:
+        if existing.vote == vote:
+            return {"status": "unchanged"}
+        if existing.vote == 1:
+            db.execute(text("UPDATE comments SET upvotes = upvotes - 1 WHERE id = :id"), {"id": comment_id})
+        else:
+            db.execute(text("UPDATE comments SET downvotes = downvotes - 1 WHERE id = :id"), {"id": comment_id})
+        db.execute(
+            text("UPDATE comment_votes SET vote = :vote WHERE comment_id = :cid AND device_id = :did"),
+            {"vote": vote, "cid": comment_id, "did": device_id}
+        )
+    else:
+        db.execute(
+            text("INSERT INTO comment_votes (comment_id, device_id, vote) VALUES (:cid, :did, :vote)"),
+            {"cid": comment_id, "did": device_id, "vote": vote}
+        )
+
+    if vote == 1:
+        db.execute(text("UPDATE comments SET upvotes = upvotes + 1 WHERE id = :id"), {"id": comment_id})
+    else:
+        db.execute(text("UPDATE comments SET downvotes = downvotes + 1 WHERE id = :id"), {"id": comment_id})
+
+    db.commit()
+    return {"status": "voted"}

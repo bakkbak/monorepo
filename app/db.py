@@ -98,4 +98,12 @@ def init_db():
                 PRIMARY KEY (post_id, device_id)
             )
         """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS comment_votes (
+                comment_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+                device_id TEXT NOT NULL REFERENCES devices(id),
+                vote INTEGER NOT NULL,
+                PRIMARY KEY (comment_id, device_id)
+            )
+        """))
         conn.commit()

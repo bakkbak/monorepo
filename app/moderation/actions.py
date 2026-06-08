@@ -18,7 +18,7 @@ def hide_and_notify(post_id: str, device_id: str, verdict: str, reason: str, db:
             "id": str(uuid.uuid4()),
             "device_id": device_id,
             "title": "Post removed",
-            "body": "Your post was removed for violating community guidelines.",
+            "body": "This post was removed for violating BakBak's community guidelines. Posts of this kind aren't allowed on BakBak.",
             "post_id": post_id,
         },
     )

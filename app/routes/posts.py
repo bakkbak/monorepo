@@ -147,7 +147,7 @@ def get_feed(
         return [dict(p._mapping) for p in posts]
 
     if herd_type == "local":
-        # "For you" feed — show posts from ALL herds
+        # "For you" feed — posts from herds the user has joined
         posts = db.execute(
         text("""
             SELECT
@@ -163,6 +163,8 @@ def get_feed(
                 COALESCE(cc.cnt, 0) AS comment_count,
                 COALESCE(rc.cnt, 0) AS repost_count
             FROM posts p
+            INNER JOIN herd_memberships hm
+                ON p.herd_id = hm.herd_id AND hm.device_id = :device_id
             LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                 ON p.id = cc.post_id
             LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
@@ -172,7 +174,7 @@ def get_feed(
             ORDER BY score DESC
             LIMIT 50
         """),
-        {"lat": lat, "lng": lng}
+        {"device_id": device_id}
         ).fetchall()
 
     elif herd_type == "university":

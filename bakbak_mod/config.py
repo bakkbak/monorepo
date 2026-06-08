@@ -50,8 +50,8 @@ CONFIDENCE_THRESHOLDS: Dict[Category, float] = {
 # --- LLM (Claude) Review ---
 CLAUDE_API_KEY: Optional[str] = os.environ.get("ANTHROPIC_API_KEY")
 LLM_ENABLED: bool = bool(CLAUDE_API_KEY)
-LLM_TIER2_MODEL: str = "claude-haiku-4-5"
-LLM_TIER1_MODEL: str = "claude-haiku-4-5"
+LLM_TIER2_MODEL: str = "claude-haiku-4-5-20251001"
+LLM_TIER1_MODEL: str = "claude-haiku-4-5-20251001"
 LLM_REVIEW_THRESHOLD_LOW: float = 0.5
 LLM_REVIEW_THRESHOLD_HIGH: float = 0.85
 LLM_TIMEOUT: int = 10

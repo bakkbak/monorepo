@@ -1,0 +1,51 @@
+{
+    "org_attacks": [
+        "ABVP goons",
+        "ABVP ke gunde",
+        "SFI gunde",
+        "SFI ke gunde",
+        "NSUI chor",
+        "NSUI ke chor",
+        "AISA wale pagal",
+        "RSS agent",
+        "RSS ka dalal",
+        "sanghi agent campus",
+        "comrade saale",
+        "naxal student",
+        "campus naxal"
+    ],
+    "incitement": [
+        "election mein dhulai",
+        "union election maar do",
+        "vote nahi diya toh",
+        "boycott election",
+        "election boycott",
+        "chakka jam campus",
+        "campus bandh karo",
+        "class boycott karo",
+        "dharna daalo",
+        "gherao admin",
+        "gherao VC",
+        "tod phod karo",
+        "aag lagao campus",
+        "campus jalao",
+        "hostel bandh karo",
+        "gate lock karo"
+    ],
+    "targeted_harassment": [
+        "president ka muh tod",
+        "secretary ko dhulai",
+        "candidate ko pel do",
+        "election ke baad dekhenge",
+        "jeetne nahi denge",
+        "harane ke baad maar",
+        "support kiya toh dekh lena",
+        "vote kisko diya pata lagega"
+    ],
+    "patterns": [
+        "(?:ABVP|SFI|NSUI|AISA|RSS|BJP|Congress|AAP).{0,15}(?:gund[ae]|chor|dalal|agent|pagal|gadhe|kamina|mc|bc|saale)",
+        "(?:election|vote|union|student\\s*body).{0,15}(?:maar|dhulai|tod|pel|dekh\\s*lena|boycott|band)",
+        "(?:campus|hostel|college|gate|admin).{0,10}(?:bandh|jalao|tod|aag|gherao|lock|block)",
+        "(?:support|vote|campaign).{0,15}(?:kiya|diya|karoge).{0,10}(?:toh|to).{0,10}(?:dekh|maar|pel|tod)"
+    ]
+}

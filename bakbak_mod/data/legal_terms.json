@@ -1,0 +1,52 @@
+{
+    "defamation_patterns": [
+        "(?:professor|prof|sir|madam|dean|hod|warden|teacher).{0,30}(?:corrupt|fraud|chor|thief|bribe|sexual|harass|scandal|affair|drunk)",
+        "(?:principal|registrar|vc|vice chancellor).{0,30}(?:corrupt|fraud|scandal|bribe|scam)",
+        "(?:this person|ye aadmi|ye ladki|ye ladka).{0,20}(?:chor|fraud|cheat|druggie|dealer)"
+    ],
+    "impersonation": [
+        "i am the dean",
+        "i am the warden",
+        "this is official notice",
+        "university administration",
+        "police notice",
+        "legal notice hereby",
+        "main dean hun",
+        "main warden hun",
+        "official order"
+    ],
+    "obscenity_keywords": [
+        "child abuse",
+        "sexual abuse",
+        "rape video",
+        "murder video",
+        "snuff",
+        "gore video",
+        "torture video",
+        "necrophilia",
+        "zoophilia",
+        "human trafficking"
+    ],
+    "illegal_activity": [
+        "drug dealer",
+        "drugs available",
+        "maal milega",
+        "ganja milega",
+        "charas available",
+        "md available",
+        "weed supply",
+        "cocaine supply",
+        "fake id card",
+        "fake marksheet",
+        "proxy exam",
+        "exam paper leaked",
+        "paper leak",
+        "question paper selling",
+        "answer key for sale"
+    ],
+    "patterns": [
+        "(?:sell|buy|supply|deliver).{0,15}(?:drug|ganja|weed|charas|cocaine|mdma|lsd|meth|heroin)",
+        "(?:fake|forged|nakli).{0,15}(?:id|certificate|marksheet|degree|document)",
+        "(?:paper|exam|question).{0,10}(?:leak|sell|buy|available)"
+    ]
+}

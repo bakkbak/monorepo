@@ -4,4 +4,5 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 httpx
-bakbak-mod
+emoji>=2.0
+anthropic>=0.40.0

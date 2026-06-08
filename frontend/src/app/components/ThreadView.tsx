@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import type { Post } from '../utils';
 import { getTimeAgo, communityEmojis } from '../utils';
-import { votePost, voteComment, getComments, createComment, reportPost, type ApiComment } from '../api';
+import { votePost, getComments, createComment, reportPost, type ApiComment } from '../api';
 
 type CommentTree = ApiComment & { replies: CommentTree[] };
 
@@ -55,16 +55,6 @@ function CommentItem({
   const emojis = ['🐵', '🦁', '🐼', '🐨', '🐸', '🦊', '🐙', '🦋'];
   const emoji = emojis[comment.content.length % emojis.length];
 
-  const handleVote = async (direction: 'up' | 'down') => {
-    const next = vote === direction ? null : direction;
-    setVote(next);
-    if (deviceId && next) {
-      try {
-        await voteComment({ comment_id: comment.id, device_id: deviceId, vote: next === 'up' ? 1 : -1 });
-      } catch { setVote(vote); }
-    }
-  };
-
   return (
     <div className={depth > 0 ? 'ml-10 border-l-2 border-gray-200 pl-3' : ''}>
       <div className="py-3">
@@ -79,7 +69,7 @@ function CommentItem({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <button
-              onClick={() => handleVote('up')}
+              onClick={() => setVote(vote === 'up' ? null : 'up')}
               className={`p-1 rounded transition-colors ${
                 vote === 'up' ? 'bg-yellow-400 text-black' : 'text-gray-400 hover:text-gray-600'
               }`}
@@ -90,7 +80,7 @@ function CommentItem({
               {upvotes}
             </span>
             <button
-              onClick={() => handleVote('down')}
+              onClick={() => setVote(vote === 'down' ? null : 'down')}
               className={`p-1 rounded transition-colors ${
                 vote === 'down' ? 'bg-black text-yellow-400' : 'text-gray-400 hover:text-gray-600'
               }`}

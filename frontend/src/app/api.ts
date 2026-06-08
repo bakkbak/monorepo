@@ -124,19 +124,6 @@ export async function createComment(params: {
   return request<{ status: string; comment_id: string }>(`/comments/?${qs}`, { method: 'POST' });
 }
 
-export async function voteComment(params: {
-  comment_id: string;
-  device_id: string;
-  vote: 1 | -1;
-}) {
-  const qs = new URLSearchParams({
-    comment_id: params.comment_id,
-    device_id: params.device_id,
-    vote: String(params.vote),
-  });
-  return request<{ status: string }>(`/comments/vote?${qs}`, { method: 'POST' });
-}
-
 export type MyComment = {
   id: string;
   post_id: string;

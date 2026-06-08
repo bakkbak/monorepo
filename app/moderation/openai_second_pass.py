@@ -55,7 +55,7 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
                 ANTHROPIC_API_URL,
                 headers={
                     "x-api-key": ANTHROPIC_API_KEY,
-                    "anthropic-version": "2024-10-22",
+                    "anthropic-version": "2025-01-01",
                     "content-type": "application/json",
                 },
                 json={

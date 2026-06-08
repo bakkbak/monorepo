@@ -1,6 +1,10 @@
 {
     "direct_threats": [
         "i will kill you",
+        "will beat you",
+        "will beat you up",
+        "will thrash you",
+        "will bash you",
         "main tujhe maar dunga",
         "tujhe khatam kar dunga",
         "tera khoon kar dunga",
@@ -52,9 +56,9 @@
         "social boycott"
     ],
     "patterns": [
-        "(?:i.?ll|will|going to|gonna).{0,20}(?:kill|murder|stab|shoot|bomb|burn|hurt|destroy|end).{0,10}(?:you|him|her|them|u\\b|that|this person|saale|tujhe|usko|isko)",
+        "(?:i.?ll|we.?ll|will|going to|gonna).{0,20}(?:kill|murder|stab|shoot|bomb|burn|hurt|destroy|end|beat|thrash|bash|smash|slap|punch|hit).{0,15}(?:you|him|her|them|u\\b|that|this person|saale|tujhe|usko|isko|up)",
         "(?:tujhe|teko|usko|usse|isko).{0,20}(?:maar|khatam|udaa|tod|jala|cheer)",
-        "(?:let.?s|chalo|sab).{0,20}(?:beat|attack|lynch|gherao|dhulai|pitai)",
+        "(?:let.?s|chalo|sab|we will|we.?ll).{0,20}(?:beat|attack|lynch|gherao|dhulai|pitai|thrash)",
         "(?:bahar|gate|hostel|canteen).{0,10}(?:mil|aa|aaja|chal)",
         "(?:acid|gun|knife|blade|chaaku).{0,15}(?:se|with|use)"
     ]

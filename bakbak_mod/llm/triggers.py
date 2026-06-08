@@ -19,11 +19,12 @@ def should_trigger_llm_review(
 ) -> bool:
     """Determine if LLM review is warranted.
 
-    Always returns True when called — every message should be reviewed by
-    the LLM so that content which slips past keyword detectors is still
-    caught.  The caller already gates on ``config.LLM_ENABLED``.
+    Triggers only when keyword detectors matched (Tier 1 or Tier 2).
+    Clean content that passes rules is handled by the separate async
+    second-pass LLM in the application layer.
     """
-    return True
+    matched = [r for r in rule_results if r.matched]
+    return bool(matched)
 
 
 def _is_long_unmatched(

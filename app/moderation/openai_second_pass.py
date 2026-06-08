@@ -3,10 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import time
-import uuid
 
 import httpx
-from sqlalchemy.sql import text
 
 from ..db import SessionLocal
 from .actions import hide_and_notify, log_moderation
@@ -45,32 +43,12 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
         logger.debug("ANTHROPIC_API_KEY not set, skipping second-pass")
         return
 
-    logger.info(f"Second-pass starting for post {post_id}, key prefix: {ANTHROPIC_API_KEY[:12]}..., key length: {len(ANTHROPIC_API_KEY)}, key suffix: ...{ANTHROPIC_API_KEY[-4:]}")
+    logger.info(f"Second-pass starting for post {post_id}")
 
     start = time.monotonic()
     db = SessionLocal()
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Diagnostic: list available models
-            try:
-                models_resp = await client.get(
-                    "https://api.anthropic.com/v1/models",
-                    headers={
-                        "x-api-key": ANTHROPIC_API_KEY,
-                        "anthropic-version": "2023-06-01",
-                    },
-                )
-                logger.info(f"Models endpoint status: {models_resp.status_code}")
-                if models_resp.status_code == 200:
-                    import json as _json
-                    models_data = models_resp.json()
-                    model_ids = [m.get("id", "?") for m in models_data.get("data", [])]
-                    logger.info(f"Available model IDs: {model_ids}")
-                else:
-                    logger.info(f"Models response: {models_resp.text[:500]}")
-            except Exception as me:
-                logger.error(f"Models listing failed: {me}")
-
             response = await client.post(
                 ANTHROPIC_API_URL,
                 headers={
@@ -88,8 +66,6 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
                     "temperature": 0.0,
                 },
             )
-            logger.info(f"Anthropic response status: {response.status_code}")
-            logger.info(f"Anthropic response body: {response.text[:500]}")
             response.raise_for_status()
 
         data = response.json()

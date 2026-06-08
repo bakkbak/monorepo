@@ -5,7 +5,7 @@ import type { MyComment, Notification } from '../api';
 import { feedPostToPost, getTimeAgo, communityEmojis } from '../utils';
 import type { Post } from '../utils';
 
-type TabType = 'posts' | 'comments' | 'saved' | 'notifications';
+type TabType = 'posts' | 'comments' | 'saved';
 
 interface ProfilePageProps {
   deviceId: string | null;
@@ -24,6 +24,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
   const [postVotes, setPostVotes] = useState<Record<string, 'up' | 'down' | null>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     if (!deviceId) return;
@@ -44,7 +45,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
   }, [deviceId, activeTab]);
 
   useEffect(() => {
-    if (!deviceId || activeTab !== 'notifications') return;
+    if (!deviceId || !showNotifications) return;
     setNotificationsLoading(true);
     getNotifications(deviceId)
       .then((data) => {
@@ -56,7 +57,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
       })
       .catch(() => {})
       .finally(() => setNotificationsLoading(false));
-  }, [deviceId, activeTab]);
+  }, [deviceId, showNotifications]);
 
   const HERD_ID_DISPLAY: Record<string, string> = {
     ipl: 'IPL',
@@ -309,65 +310,80 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
           <h1 className="text-3xl font-bold text-black leading-tight" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>
             Hey there<br />stranger!
           </h1>
-          <button className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors">
-            <Settings className="w-6 h-6 text-black" />
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="px-6 mb-6">
-        <div className="flex gap-6 border-b-2 border-gray-200">
-          <button onClick={() => setActiveTab('posts')} className="pb-3 relative">
-            <span className={`font-medium ${activeTab === 'posts' ? 'text-black' : 'text-gray-500'}`}>
-              My Posts
-            </span>
-            {activeTab === 'posts' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
-            )}
-          </button>
-
-          <button onClick={() => setActiveTab('comments')} className="pb-3 relative">
-            <span className={`font-medium ${activeTab === 'comments' ? 'text-black' : 'text-gray-500'}`}>
-              My Comments
-            </span>
-            {activeTab === 'comments' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
-            )}
-          </button>
-
-          <button onClick={() => setActiveTab('saved')} className="pb-3 relative">
-            <span className={`font-medium ${activeTab === 'saved' ? 'text-black' : 'text-gray-500'}`}>
-              Saved Posts
-            </span>
-            {activeTab === 'saved' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
-            )}
-          </button>
-
-          <button onClick={() => setActiveTab('notifications')} className="pb-3 relative">
-            <span className={`font-medium ${activeTab === 'notifications' ? 'text-black' : 'text-gray-500'}`}>
-              Notifications
-            </span>
-            {activeTab === 'notifications' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="space-y-4 px-3">
-        {activeTab === 'posts' && renderPosts(myPosts, repostedPosts)}
-        {activeTab === 'comments' && renderComments()}
-        {activeTab === 'saved' && (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <p className="text-gray-400 text-lg">Coming soon</p>
-            <p className="text-gray-300 text-sm mt-1">Saved posts will show up here</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className={`p-3 rounded-full border-2 transition-colors ${
+                showNotifications
+                  ? 'border-yellow-400 bg-yellow-400 hover:bg-yellow-300'
+                  : 'border-black bg-white hover:bg-gray-50'
+              }`}
+            >
+              <Bell className={`w-6 h-6 ${showNotifications ? 'text-black' : 'text-black'}`} />
+            </button>
+            <button className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors">
+              <Settings className="w-6 h-6 text-black" />
+            </button>
           </div>
-        )}
-        {activeTab === 'notifications' && renderNotifications()}
+        </div>
       </div>
+
+      {showNotifications ? (
+        <>
+          <div className="px-6 mb-4">
+            <h2 className="text-lg font-bold text-black">Notifications</h2>
+          </div>
+          <div className="space-y-4 px-3">
+            {renderNotifications()}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Tabs */}
+          <div className="px-6 mb-6">
+            <div className="flex gap-6 border-b-2 border-gray-200">
+              <button onClick={() => setActiveTab('posts')} className="pb-3 relative">
+                <span className={`font-medium ${activeTab === 'posts' ? 'text-black' : 'text-gray-500'}`}>
+                  My Posts
+                </span>
+                {activeTab === 'posts' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
+                )}
+              </button>
+
+              <button onClick={() => setActiveTab('comments')} className="pb-3 relative">
+                <span className={`font-medium ${activeTab === 'comments' ? 'text-black' : 'text-gray-500'}`}>
+                  My Comments
+                </span>
+                {activeTab === 'comments' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
+                )}
+              </button>
+
+              <button onClick={() => setActiveTab('saved')} className="pb-3 relative">
+                <span className={`font-medium ${activeTab === 'saved' ? 'text-black' : 'text-gray-500'}`}>
+                  Saved Posts
+                </span>
+                {activeTab === 'saved' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-4 px-3">
+            {activeTab === 'posts' && renderPosts(myPosts, repostedPosts)}
+            {activeTab === 'comments' && renderComments()}
+            {activeTab === 'saved' && (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <p className="text-gray-400 text-lg">Coming soon</p>
+                <p className="text-gray-300 text-sm mt-1">Saved posts will show up here</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

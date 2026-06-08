@@ -14,7 +14,7 @@ from .prompts import SECOND_PASS_SYSTEM_PROMPT
 
 logger = logging.getLogger("bakbak.moderation.second_pass")
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 CLAUDE_MODEL = os.environ.get("MODERATION_MODEL", "claude-haiku-4-0")
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 
@@ -45,7 +45,7 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
         logger.debug("ANTHROPIC_API_KEY not set, skipping second-pass")
         return
 
-    logger.info(f"Second-pass starting for post {post_id}, key prefix: {ANTHROPIC_API_KEY[:10]}...")
+    logger.info(f"Second-pass starting for post {post_id}, key prefix: {ANTHROPIC_API_KEY[:12]}..., key length: {len(ANTHROPIC_API_KEY)}, key suffix: ...{ANTHROPIC_API_KEY[-4:]}")
 
     start = time.monotonic()
     db = SessionLocal()

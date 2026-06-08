@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 import time
 import uuid
 
-import httpx
+import anthropic
 from sqlalchemy.sql import text
 
 from ..db import SessionLocal
@@ -15,9 +14,8 @@ from .prompts import SECOND_PASS_SYSTEM_PROMPT
 
 logger = logging.getLogger("bakbak.moderation.second_pass")
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.environ.get("OPENAI_MODERATION_MODEL", "gpt-4o-mini")
-OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL = os.environ.get("MODERATION_MODEL", "claude-haiku-4-20250414")
 
 ACTIONABLE_VERDICTS = {"STRESS", "TAKEDOWN"}
 
@@ -42,43 +40,26 @@ def parse_moderation_response(raw: str) -> dict:
 
 
 async def trigger_second_pass(post_id: str, content: str, device_id: str) -> None:
-    if not OPENAI_API_KEY:
-        logger.debug("OPENAI_API_KEY not set, skipping second-pass")
+    if not ANTHROPIC_API_KEY:
+        logger.debug("ANTHROPIC_API_KEY not set, skipping second-pass")
         return
 
     start = time.monotonic()
     db = SessionLocal()
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            max_retries = 3
-            for attempt in range(max_retries):
-                response = await client.post(
-                    OPENAI_API_URL,
-                    headers={
-                        "Authorization": f"Bearer {OPENAI_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": OPENAI_MODEL,
-                        "messages": [
-                            {"role": "system", "content": SECOND_PASS_SYSTEM_PROMPT},
-                            {"role": "user", "content": content},
-                        ],
-                        "temperature": 0.0,
-                        "max_tokens": 150,
-                    },
-                )
-                if response.status_code == 429 and attempt < max_retries - 1:
-                    wait = 2 ** attempt
-                    logger.warning(f"OpenAI 429 for post {post_id}, retry {attempt+1} in {wait}s")
-                    await asyncio.sleep(wait)
-                    continue
-                response.raise_for_status()
-                break
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=150,
+            system=SECOND_PASS_SYSTEM_PROMPT,
+            messages=[
+                {"role": "user", "content": content},
+            ],
+            temperature=0.0,
+        )
 
-        data = response.json()
-        raw_output = data["choices"][0]["message"]["content"]
-        usage = data.get("usage", {})
+        raw_output = message.content[0].text
+        usage = message.usage
         latency_ms = int((time.monotonic() - start) * 1000)
 
         result = parse_moderation_response(raw_output)
@@ -90,10 +71,10 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
             category=result["category"],
             reason=result["reason"],
             confidence=result["confidence"],
-            model=OPENAI_MODEL,
+            model=CLAUDE_MODEL,
             db=db,
-            prompt_tokens=usage.get("prompt_tokens"),
-            completion_tokens=usage.get("completion_tokens"),
+            prompt_tokens=usage.input_tokens if usage else None,
+            completion_tokens=usage.output_tokens if usage else None,
             latency_ms=latency_ms,
         )
 
@@ -101,6 +82,7 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
             hide_and_notify(post_id, device_id, result["verdict"], result["reason"], db)
 
         db.commit()
+        logger.info(f"Second-pass complete for post {post_id}: {result['verdict']}")
 
     except Exception as e:
         logger.error(f"Second-pass moderation failed for post {post_id}: {e}")
@@ -113,7 +95,7 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
                 category="NONE",
                 reason="API call failed",
                 confidence="LOW",
-                model=OPENAI_MODEL,
+                model=CLAUDE_MODEL,
                 db=db,
                 latency_ms=latency_ms,
                 error=str(e),

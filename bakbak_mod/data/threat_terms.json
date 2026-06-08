@@ -1,5 +1,17 @@
 {
     "direct_threats": [
+        "kill yourself",
+        "kys",
+        "go kill yourself",
+        "go die",
+        "drink bleach",
+        "hang yourself",
+        "off yourself",
+        "end yourself",
+        "mar ja",
+        "mar jaa",
+        "khud ko maar",
+        "apna kaam tamam kar",
         "i will kill you",
         "will beat you",
         "will beat you up",
@@ -56,6 +68,7 @@
         "social boycott"
     ],
     "patterns": [
+        "(?:kill|end|hang|off|shoot|stab)\\s+(?:yourself|yourselves|urself|ur self)",
         "(?:i.?ll|we.?ll|will|going to|gonna).{0,20}(?:kill|murder|stab|shoot|bomb|burn|hurt|destroy|end|beat|thrash|bash|smash|slap|punch|hit).{0,15}(?:you|him|her|them|u\\b|that|this person|saale|tujhe|usko|isko|up)",
         "(?:tujhe|teko|usko|usse|isko).{0,20}(?:maar|khatam|udaa|tod|jala|cheer)",
         "(?:let.?s|chalo|sab|we will|we.?ll).{0,20}(?:beat|attack|lynch|gherao|dhulai|pitai|thrash)",

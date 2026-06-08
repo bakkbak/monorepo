@@ -15,7 +15,7 @@ from .prompts import SECOND_PASS_SYSTEM_PROMPT
 logger = logging.getLogger("bakbak.moderation.second_pass")
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-CLAUDE_MODEL = os.environ.get("MODERATION_MODEL", "claude-3-5-haiku-20241022")
+CLAUDE_MODEL = os.environ.get("MODERATION_MODEL", "claude-3-haiku-20240307")
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 
 ACTIONABLE_VERDICTS = {"STRESS", "TAKEDOWN"}

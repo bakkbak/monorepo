@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import time
@@ -49,23 +50,31 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
     db = SessionLocal()
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                OPENAI_API_URL,
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": OPENAI_MODEL,
-                    "messages": [
-                        {"role": "system", "content": SECOND_PASS_SYSTEM_PROMPT},
-                        {"role": "user", "content": content},
-                    ],
-                    "temperature": 0.0,
-                    "max_tokens": 150,
-                },
-            )
-            response.raise_for_status()
+            max_retries = 3
+            for attempt in range(max_retries):
+                response = await client.post(
+                    OPENAI_API_URL,
+                    headers={
+                        "Authorization": f"Bearer {OPENAI_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": OPENAI_MODEL,
+                        "messages": [
+                            {"role": "system", "content": SECOND_PASS_SYSTEM_PROMPT},
+                            {"role": "user", "content": content},
+                        ],
+                        "temperature": 0.0,
+                        "max_tokens": 150,
+                    },
+                )
+                if response.status_code == 429 and attempt < max_retries - 1:
+                    wait = 2 ** attempt
+                    logger.warning(f"OpenAI 429 for post {post_id}, retry {attempt+1} in {wait}s")
+                    await asyncio.sleep(wait)
+                    continue
+                response.raise_for_status()
+                break
 
         data = response.json()
         raw_output = data["choices"][0]["message"]["content"]

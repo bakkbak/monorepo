@@ -61,7 +61,13 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
                     },
                 )
                 logger.info(f"Models endpoint status: {models_resp.status_code}")
-                logger.info(f"Models response: {models_resp.text[:1000]}")
+                if models_resp.status_code == 200:
+                    import json as _json
+                    models_data = models_resp.json()
+                    model_ids = [m.get("id", "?") for m in models_data.get("data", [])]
+                    logger.info(f"Available model IDs: {model_ids}")
+                else:
+                    logger.info(f"Models response: {models_resp.text[:500]}")
             except Exception as me:
                 logger.error(f"Models listing failed: {me}")
 

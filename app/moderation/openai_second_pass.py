@@ -51,6 +51,20 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
     db = SessionLocal()
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Diagnostic: list available models
+            try:
+                models_resp = await client.get(
+                    "https://api.anthropic.com/v1/models",
+                    headers={
+                        "x-api-key": ANTHROPIC_API_KEY,
+                        "anthropic-version": "2023-06-01",
+                    },
+                )
+                logger.info(f"Models endpoint status: {models_resp.status_code}")
+                logger.info(f"Models response: {models_resp.text[:1000]}")
+            except Exception as me:
+                logger.error(f"Models listing failed: {me}")
+
             response = await client.post(
                 ANTHROPIC_API_URL,
                 headers={

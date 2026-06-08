@@ -106,4 +106,33 @@ def init_db():
                 PRIMARY KEY (comment_id, device_id)
             )
         """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS moderation_logs (
+                id TEXT PRIMARY KEY,
+                post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+                pass_type TEXT NOT NULL DEFAULT 'second_pass',
+                verdict TEXT NOT NULL,
+                category TEXT,
+                reason TEXT,
+                confidence TEXT,
+                model TEXT,
+                prompt_tokens INTEGER,
+                completion_tokens INTEGER,
+                latency_ms INTEGER,
+                error TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id TEXT PRIMARY KEY,
+                device_id TEXT NOT NULL REFERENCES devices(id),
+                type TEXT NOT NULL DEFAULT 'moderation',
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                post_id TEXT REFERENCES posts(id) ON DELETE SET NULL,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
         conn.commit()

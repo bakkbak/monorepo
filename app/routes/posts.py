@@ -1,8 +1,11 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from ..deps import get_db
+from ..moderation.first_pass import run_first_pass
+from ..moderation.actions import hide_and_notify, log_moderation
+from ..moderation.openai_second_pass import trigger_second_pass
 import uuid
 
 router = APIRouter()
@@ -27,6 +30,7 @@ def create_post(
     lng: float,
     herd_type: str = "local",
     herd_id: Optional[str] = None,
+    background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db)
 ):
     banned = db.execute(
@@ -61,13 +65,17 @@ def create_post(
     elif herd_type != "local":
         raise HTTPException(status_code=400, detail="Invalid herd type")
 
+    mod_result = run_first_pass(content)
+
+    post_id = str(uuid.uuid4())
+
     db.execute(
         text("""
             INSERT INTO posts (id, content, lat, lng, device_id, herd_type, herd_id, university_domain)
             VALUES (:id, :content, :lat, :lng, :device_id, :herd_type, :herd_id, :university_domain)
         """),
         {
-            "id": str(uuid.uuid4()),
+            "id": post_id,
             "content": content,
             "lat": lat,
             "lng": lng,
@@ -77,9 +85,25 @@ def create_post(
             "university_domain": university_domain
         }
     )
-    db.commit()
 
-    return {"status": "posted"}
+    if mod_result.verdict != "PASS":
+        hide_and_notify(post_id, device_id, mod_result.verdict, mod_result.reason, db)
+        log_moderation(
+            post_id=post_id,
+            pass_type="first_pass",
+            verdict=mod_result.verdict,
+            category=mod_result.category,
+            reason=mod_result.reason,
+            confidence=mod_result.confidence,
+            model=mod_result.model,
+            db=db,
+        )
+        db.commit()
+        return {"status": "moderated", "post_id": post_id}
+
+    db.commit()
+    background_tasks.add_task(trigger_second_pass, post_id, content, device_id)
+    return {"status": "posted", "post_id": post_id}
 
 @router.get("/feed")
 def get_feed(

@@ -13,9 +13,11 @@ interface ProfilePageProps {
   repostedPosts?: Post[];
   onRepost?: (post: Post) => void;
   isReposted?: (postId: string) => boolean;
+  unreadCount?: number;
+  onNotificationsRead?: () => void;
 }
 
-export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepost, isReposted }: ProfilePageProps) {
+export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepost, isReposted, unreadCount = 0, onNotificationsRead }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [myComments, setMyComments] = useState<MyComment[]>([]);
@@ -52,7 +54,9 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
         setNotifications(data);
         const unreadIds = data.filter((n) => !n.is_read).map((n) => n.id);
         if (unreadIds.length > 0) {
-          markNotificationsRead(deviceId, unreadIds).catch(() => {});
+          markNotificationsRead(deviceId, unreadIds)
+            .then(() => onNotificationsRead?.())
+            .catch(() => {});
         }
       })
       .catch(() => {})
@@ -313,13 +317,18 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className={`p-3 rounded-full border-2 transition-colors ${
+              className={`p-3 rounded-full border-2 transition-colors relative ${
                 showNotifications
                   ? 'border-yellow-400 bg-yellow-400 hover:bg-yellow-300'
                   : 'border-black bg-white hover:bg-gray-50'
               }`}
             >
-              <Bell className={`w-6 h-6 ${showNotifications ? 'text-black' : 'text-black'}`} />
+              <Bell className="w-6 h-6 text-black" />
+              {!showNotifications && unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             <button className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors">
               <Settings className="w-6 h-6 text-black" />

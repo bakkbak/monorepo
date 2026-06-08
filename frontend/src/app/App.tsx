@@ -8,7 +8,7 @@ import { PostComposer } from './components/PostComposer';
 import { SplashScreen } from './components/SplashScreen';
 import { getOrCreateDeviceId } from './device';
 import { getLocation, type Location } from './location';
-import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd } from './api';
+import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications } from './api';
 import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
@@ -31,6 +31,9 @@ export default function App() {
 
   // Joined herds
   const [joinedHerdIds, setJoinedHerdIds] = useState<string[]>([]);
+
+  // Unread notification count
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const feedOptions = buildFeedOptions(joinedHerdIds);
   const communities = buildCommunities(joinedHerdIds);
@@ -58,6 +61,23 @@ export default function App() {
   useEffect(() => {
     refreshJoinedHerds();
   }, [refreshJoinedHerds]);
+
+  // Poll unread notification count
+  const refreshUnreadCount = useCallback(async () => {
+    if (!deviceId) return;
+    try {
+      const notifs = await getNotifications(deviceId);
+      setUnreadCount(notifs.filter((n) => !n.is_read).length);
+    } catch {
+      // ignore
+    }
+  }, [deviceId]);
+
+  useEffect(() => {
+    refreshUnreadCount();
+    const interval = setInterval(refreshUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [refreshUnreadCount]);
 
   // Load reposts from backend on init
   useEffect(() => {
@@ -235,7 +255,7 @@ export default function App() {
           />
         )}
         {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
-        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} />}
+        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} />}
       </div>
 
       {/* FAB */}
@@ -279,11 +299,18 @@ export default function App() {
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 relative ${
               activeTab === 'profile' ? 'text-black' : 'text-gray-700'
             }`}
           >
-            <User className="w-6 h-6" />
+            <div className="relative">
+              <User className="w-6 h-6" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </div>
             <span className="text-xs mt-1 font-medium">Profile</span>
           </button>
         </div>

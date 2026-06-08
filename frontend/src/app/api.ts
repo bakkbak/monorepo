@@ -179,6 +179,31 @@ export async function getJoinedHerds(device_id: string) {
   return request<string[]>(`/herds/joined?${qs}`);
 }
 
+// --- Notifications ---
+
+export type Notification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  post_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export async function getNotifications(device_id: string) {
+  const qs = new URLSearchParams({ device_id });
+  return request<Notification[]>(`/notifications/?${qs}`);
+}
+
+export async function markNotificationsRead(device_id: string, notification_ids: string[]) {
+  const qs = new URLSearchParams({ device_id });
+  return request<{ status: string }>(`/notifications/read?${qs}`, {
+    method: 'POST',
+    body: JSON.stringify(notification_ids),
+  });
+}
+
 // --- Reports ---
 
 export async function reportPost(params: {

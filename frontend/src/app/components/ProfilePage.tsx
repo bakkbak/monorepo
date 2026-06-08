@@ -1,11 +1,11 @@
-import { Settings, ArrowUp, ArrowDown, MessageCircle, Repeat2, Share2, ChevronRight } from 'lucide-react';
+import { Settings, ArrowUp, ArrowDown, MessageCircle, Repeat2, Share2, ChevronRight, Bell } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getMyPosts, getMyComments, votePost } from '../api';
-import type { MyComment } from '../api';
+import { getMyPosts, getMyComments, getNotifications, markNotificationsRead, votePost } from '../api';
+import type { MyComment, Notification } from '../api';
 import { feedPostToPost, getTimeAgo, communityEmojis } from '../utils';
 import type { Post } from '../utils';
 
-type TabType = 'posts' | 'comments' | 'saved';
+type TabType = 'posts' | 'comments' | 'saved' | 'notifications';
 
 interface ProfilePageProps {
   deviceId: string | null;
@@ -22,6 +22,8 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
   const [loading, setLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [postVotes, setPostVotes] = useState<Record<string, 'up' | 'down' | null>>({});
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   useEffect(() => {
     if (!deviceId) return;
@@ -39,6 +41,21 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
       .then((data) => setMyComments(data))
       .catch(() => {})
       .finally(() => setCommentsLoading(false));
+  }, [deviceId, activeTab]);
+
+  useEffect(() => {
+    if (!deviceId || activeTab !== 'notifications') return;
+    setNotificationsLoading(true);
+    getNotifications(deviceId)
+      .then((data) => {
+        setNotifications(data);
+        const unreadIds = data.filter((n) => !n.is_read).map((n) => n.id);
+        if (unreadIds.length > 0) {
+          markNotificationsRead(deviceId, unreadIds).catch(() => {});
+        }
+      })
+      .catch(() => {})
+      .finally(() => setNotificationsLoading(false));
   }, [deviceId, activeTab]);
 
   const HERD_ID_DISPLAY: Record<string, string> = {
@@ -245,6 +262,45 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     ));
   };
 
+  const renderNotifications = () => {
+    if (notificationsLoading) {
+      return (
+        <div className="flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+
+    if (notifications.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+          <p className="text-gray-400 text-lg">Nothing here yet</p>
+          <p className="text-gray-300 text-sm mt-1">Notifications will show up here</p>
+        </div>
+      );
+    }
+
+    return notifications.map((n) => (
+      <div
+        key={n.id}
+        className={`bg-white rounded-xl border-2 overflow-hidden ${
+          n.is_read ? 'border-black' : 'border-yellow-400'
+        }`}
+      >
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Bell className={`w-4 h-4 ${n.is_read ? 'text-gray-400' : 'text-yellow-500'}`} />
+            <span className={`text-xs font-medium ${n.is_read ? 'text-gray-400' : 'text-yellow-600'}`}>
+              {n.title}
+            </span>
+            <span className="text-xs text-gray-400">{getTimeAgo(n.created_at)}</span>
+          </div>
+          <p className="text-black leading-relaxed">{n.body}</p>
+        </div>
+      </div>
+    ));
+  };
+
   return (
     <div className="min-h-screen bg-white pb-4">
       {/* Header */}
@@ -288,6 +344,15 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
             )}
           </button>
+
+          <button onClick={() => setActiveTab('notifications')} className="pb-3 relative">
+            <span className={`font-medium ${activeTab === 'notifications' ? 'text-black' : 'text-gray-500'}`}>
+              Notifications
+            </span>
+            {activeTab === 'notifications' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400"></div>
+            )}
+          </button>
         </div>
       </div>
 
@@ -301,6 +366,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
             <p className="text-gray-300 text-sm mt-1">Saved posts will show up here</p>
           </div>
         )}
+        {activeTab === 'notifications' && renderNotifications()}
       </div>
     </div>
   );

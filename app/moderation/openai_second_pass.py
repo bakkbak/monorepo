@@ -5,7 +5,7 @@ import os
 import time
 import uuid
 
-import anthropic
+import httpx
 from sqlalchemy.sql import text
 
 from ..db import SessionLocal
@@ -16,6 +16,7 @@ logger = logging.getLogger("bakbak.moderation.second_pass")
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL = os.environ.get("MODERATION_MODEL", "claude-3-haiku-20240307")
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 
 ACTIONABLE_VERDICTS = {"STRESS", "TAKEDOWN"}
 
@@ -44,22 +45,36 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
         logger.debug("ANTHROPIC_API_KEY not set, skipping second-pass")
         return
 
+    logger.info(f"Second-pass starting for post {post_id}, key prefix: {ANTHROPIC_API_KEY[:10]}...")
+
     start = time.monotonic()
     db = SessionLocal()
     try:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        message = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=150,
-            system=SECOND_PASS_SYSTEM_PROMPT,
-            messages=[
-                {"role": "user", "content": content},
-            ],
-            temperature=0.0,
-        )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                ANTHROPIC_API_URL,
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": CLAUDE_MODEL,
+                    "max_tokens": 150,
+                    "system": SECOND_PASS_SYSTEM_PROMPT,
+                    "messages": [
+                        {"role": "user", "content": content},
+                    ],
+                    "temperature": 0.0,
+                },
+            )
+            logger.info(f"Anthropic response status: {response.status_code}")
+            logger.info(f"Anthropic response body: {response.text[:500]}")
+            response.raise_for_status()
 
-        raw_output = message.content[0].text
-        usage = message.usage
+        data = response.json()
+        raw_output = data["content"][0]["text"]
+        usage = data.get("usage", {})
         latency_ms = int((time.monotonic() - start) * 1000)
 
         result = parse_moderation_response(raw_output)
@@ -73,8 +88,8 @@ async def trigger_second_pass(post_id: str, content: str, device_id: str) -> Non
             confidence=result["confidence"],
             model=CLAUDE_MODEL,
             db=db,
-            prompt_tokens=usage.input_tokens if usage else None,
-            completion_tokens=usage.output_tokens if usage else None,
+            prompt_tokens=usage.get("input_tokens"),
+            completion_tokens=usage.get("output_tokens"),
             latency_ms=latency_ms,
         )
 

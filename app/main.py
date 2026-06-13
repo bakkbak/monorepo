@@ -21,7 +21,10 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["not
 
 @app.on_event("startup")
 def startup():
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[startup] init_db failed: {e}")
 
 @app.get("/api")
 def root():

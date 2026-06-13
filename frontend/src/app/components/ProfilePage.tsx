@@ -2,6 +2,7 @@ import { Settings, ArrowUp, ArrowDown, MessageCircle, Repeat2, Share2, ChevronRi
 import { useState, useEffect } from 'react';
 import { getMyPosts, getMyComments, getNotifications, markNotificationsRead, votePost } from '../api';
 import type { MyComment, Notification } from '../api';
+import { SettingsSheet } from './SettingsSheet';
 import { feedPostToPost, getTimeAgo, communityEmojis } from '../utils';
 import type { Post } from '../utils';
 
@@ -27,6 +28,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     if (!deviceId) return;
@@ -307,6 +309,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
   };
 
   return (
+    <>
     <div className="min-h-screen bg-white pb-4">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
@@ -330,7 +333,10 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
                 </span>
               )}
             </button>
-            <button className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors"
+            >
               <Settings className="w-6 h-6 text-black" />
             </button>
           </div>
@@ -394,5 +400,10 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
         </>
       )}
     </div>
+
+    {showSettings && (
+      <SettingsSheet deviceId={deviceId} onClose={() => setShowSettings(false)} />
+    )}
+    </>
   );
 }

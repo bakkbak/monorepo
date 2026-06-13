@@ -102,7 +102,8 @@ def create_post(
         return {"status": "moderated", "post_id": post_id}
 
     db.commit()
-    background_tasks.add_task(trigger_second_pass, post_id, content, device_id)
+    if background_tasks is not None:
+        background_tasks.add_task(trigger_second_pass, post_id, content, device_id)
     return {"status": "posted", "post_id": post_id}
 
 @router.get("/feed")

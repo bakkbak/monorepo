@@ -22,6 +22,27 @@ export async function registerDevice(fingerprint: string) {
   );
 }
 
+export async function getDeviceStatus(device_id: string) {
+  const qs = new URLSearchParams({ device_id });
+  return request<{
+    verified_university: boolean;
+    university_domain: string | null;
+    verification_status: string;
+  }>(`/devices/me?${qs}`);
+}
+
+// --- Verification ---
+
+export async function requestVerification(device_id: string, email: string) {
+  const qs = new URLSearchParams({ device_id, email });
+  return request<{ status: string }>(`/verify/request?${qs}`, { method: 'POST' });
+}
+
+export async function confirmVerification(device_id: string, otp: string) {
+  const qs = new URLSearchParams({ device_id, otp });
+  return request<{ status: string; university_domain: string }>(`/verify/confirm?${qs}`, { method: 'POST' });
+}
+
 // --- Posts ---
 
 export type FeedPost = {

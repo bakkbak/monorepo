@@ -28,7 +28,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
         className="text-5xl font-bold text-black tracking-tight"
         style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}
       >
-        BakBak
+        Teevo
       </h1>
       <p className="text-black/60 mt-3 text-lg">Your campus. Unfiltered.</p>
     </div>

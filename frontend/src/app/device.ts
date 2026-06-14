@@ -1,7 +1,7 @@
 import { registerDevice } from './api';
 
-const DEVICE_ID_KEY = 'bakbak_device_id';
-const FINGERPRINT_KEY = 'bakbak_fingerprint';
+const DEVICE_ID_KEY = 'teevo_device_id';
+const FINGERPRINT_KEY = 'teevo_fingerprint';
 
 function generateFingerprint(): string {
   const nav = [

@@ -1,5 +1,7 @@
+import base64
 from typing import Optional
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from ..deps import get_db
@@ -7,6 +9,19 @@ from ..moderation.first_pass import run_first_pass
 from ..moderation.actions import hide_and_notify, log_moderation
 from ..moderation.openai_second_pass import trigger_second_pass
 import uuid
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+
+class CreatePostBody(BaseModel):
+    device_id: str
+    content: str
+    lat: float
+    lng: float
+    herd_type: str = "local"
+    herd_id: Optional[str] = None
+    image_base64: Optional[str] = None
+    image_content_type: str = "image/jpeg"
 
 router = APIRouter()
 
@@ -24,26 +39,22 @@ def auto_hide_if_needed(post_id: str, db: Session):
 
 @router.post("/")
 def create_post(
-    device_id: str,
-    content: str,
-    lat: float,
-    lng: float,
-    herd_type: str = "local",
-    herd_id: Optional[str] = None,
-    background_tasks: BackgroundTasks = None,
+    body: CreatePostBody,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     banned = db.execute(
         text("SELECT is_banned FROM devices WHERE id = :id"),
-        {"id": device_id}
+        {"id": body.device_id}
     ).scalar()
 
     if banned:
         raise HTTPException(status_code=403, detail="Device banned")
 
     university_domain = None
+    herd_type = body.herd_type
 
-    if herd_id:
+    if body.herd_id:
         herd_type = "global"
     elif herd_type == "university":
         record = db.execute(
@@ -52,7 +63,7 @@ def create_post(
                 FROM devices
                 WHERE id = :id
             """),
-            {"id": device_id}
+            {"id": body.device_id}
         ).fetchone()
 
         if not record or not record.verified_university:
@@ -65,29 +76,51 @@ def create_post(
     elif herd_type != "local":
         raise HTTPException(status_code=400, detail="Invalid herd type")
 
-    mod_result = run_first_pass(content)
+    image_bytes = None
+    if body.image_base64:
+        try:
+            image_bytes = base64.b64decode(body.image_base64)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid base64 image data")
+        if len(image_bytes) > MAX_IMAGE_SIZE:
+            raise HTTPException(status_code=400, detail="Image too large (max 5 MB)")
+        if body.image_content_type not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
+            raise HTTPException(status_code=400, detail="Unsupported image type")
+
+    mod_result = run_first_pass(body.content)
 
     post_id = str(uuid.uuid4())
+    image_url = f"/api/images/{post_id}" if image_bytes else None
 
     db.execute(
         text("""
-            INSERT INTO posts (id, content, lat, lng, device_id, herd_type, herd_id, university_domain)
-            VALUES (:id, :content, :lat, :lng, :device_id, :herd_type, :herd_id, :university_domain)
+            INSERT INTO posts (id, content, lat, lng, device_id, herd_type, herd_id, university_domain, image_url)
+            VALUES (:id, :content, :lat, :lng, :device_id, :herd_type, :herd_id, :university_domain, :image_url)
         """),
         {
             "id": post_id,
-            "content": content,
-            "lat": lat,
-            "lng": lng,
-            "device_id": device_id,
+            "content": body.content,
+            "lat": body.lat,
+            "lng": body.lng,
+            "device_id": body.device_id,
             "herd_type": herd_type,
-            "herd_id": herd_id,
-            "university_domain": university_domain
+            "herd_id": body.herd_id,
+            "university_domain": university_domain,
+            "image_url": image_url,
         }
     )
 
+    if image_bytes:
+        db.execute(
+            text("""
+                INSERT INTO post_images (post_id, data, content_type)
+                VALUES (:post_id, :data, :content_type)
+            """),
+            {"post_id": post_id, "data": image_bytes, "content_type": body.image_content_type},
+        )
+
     if mod_result.verdict != "PASS":
-        hide_and_notify(post_id, device_id, mod_result.verdict, mod_result.reason, db)
+        hide_and_notify(post_id, body.device_id, mod_result.verdict, mod_result.reason, db)
         log_moderation(
             post_id=post_id,
             pass_type="first_pass",
@@ -103,7 +136,7 @@ def create_post(
 
     db.commit()
     if background_tasks is not None:
-        background_tasks.add_task(trigger_second_pass, post_id, content, device_id)
+        background_tasks.add_task(trigger_second_pass, post_id, body.content, body.device_id)
     return {"status": "posted", "post_id": post_id}
 
 @router.get("/feed")
@@ -131,7 +164,8 @@ def get_feed(
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
                     COALESCE(cc.cnt, 0) AS comment_count,
-                    COALESCE(rc.cnt, 0) AS repost_count
+                    COALESCE(rc.cnt, 0) AS repost_count,
+                    p.image_url
                 FROM posts p
                 LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                     ON p.id = cc.post_id
@@ -162,7 +196,8 @@ def get_feed(
                 CAST((p.upvotes - p.downvotes) AS FLOAT) /
                 (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
                 COALESCE(cc.cnt, 0) AS comment_count,
-                COALESCE(rc.cnt, 0) AS repost_count
+                COALESCE(rc.cnt, 0) AS repost_count,
+                    p.image_url
             FROM posts p
             INNER JOIN herd_memberships hm
                 ON p.herd_id = hm.herd_id AND hm.device_id = :device_id
@@ -207,7 +242,8 @@ def get_feed(
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
                     COALESCE(cc.cnt, 0) AS comment_count,
-                    COALESCE(rc.cnt, 0) AS repost_count
+                    COALESCE(rc.cnt, 0) AS repost_count,
+                    p.image_url
                 FROM posts p
                 LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                     ON p.id = cc.post_id
@@ -318,7 +354,8 @@ def get_my_posts(
                 p.herd_type,
                 p.herd_id,
                 COALESCE(cc.cnt, 0) AS comment_count,
-                COALESCE(rc.cnt, 0) AS repost_count
+                COALESCE(rc.cnt, 0) AS repost_count,
+                    p.image_url
             FROM posts p
             LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
                 ON p.id = cc.post_id
@@ -395,7 +432,8 @@ def get_my_reposts(
                 p.herd_type,
                 p.herd_id,
                 COALESCE(cc.cnt, 0) AS comment_count,
-                COALESCE(rc.cnt, 0) AS repost_count
+                COALESCE(rc.cnt, 0) AS repost_count,
+                    p.image_url
             FROM reposts r
             JOIN posts p ON p.id = r.post_id
             LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc

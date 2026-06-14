@@ -226,6 +226,15 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
 
         <p className="text-gray-900 text-lg leading-relaxed mb-4">{post.content}</p>
 
+        {post.image_url && (
+          <img
+            src={post.image_url}
+            alt=""
+            className="w-full rounded-xl border-2 border-gray-200 object-cover max-h-96 mb-4"
+            loading="lazy"
+          />
+        )}
+
         <div className="flex items-center gap-4 py-3 border-t border-gray-200">
           <div className="flex items-center gap-1">
             <button

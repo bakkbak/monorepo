@@ -128,6 +128,14 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
           )}
           <div className="px-4 pb-3">
             <p className="text-gray-800 leading-relaxed">{post.content}</p>
+            {post.image_url && (
+              <img
+                src={post.image_url}
+                alt=""
+                className="mt-3 w-full rounded-xl border-2 border-gray-200 object-cover max-h-80"
+                loading="lazy"
+              />
+            )}
           </div>
         </div>
 

@@ -9,6 +9,7 @@ export type Post = {
   downvotes: number;
   comments: number;
   reposts: number;
+  image_url?: string | null;
 };
 
 // Master registry of all herds — single source of truth
@@ -136,5 +137,6 @@ export function feedPostToPost(fp: FeedPost): Post {
     downvotes: fp.downvotes ?? 0,
     comments: fp.comment_count ?? 0,
     reposts: fp.repost_count ?? 0,
+    image_url: fp.image_url ?? null,
   };
 }

@@ -107,6 +107,17 @@ def init_db():
             )
         """))
         conn.execute(text("""
+            ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_url TEXT
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS post_images (
+                post_id TEXT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+                data BYTEA NOT NULL,
+                content_type TEXT NOT NULL DEFAULT 'image/jpeg',
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
+        conn.execute(text("""
             CREATE TABLE IF NOT EXISTS moderation_logs (
                 id TEXT PRIMARY KEY,
                 post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,

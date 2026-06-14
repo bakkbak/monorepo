@@ -186,7 +186,7 @@ export default function App() {
     );
   }
 
-  const handleNewPost = async (text: string, community: string) => {
+  const handleNewPost = async (text: string, community: string, imageBase64?: string, imageContentType?: string) => {
     if (!deviceId || !location) return;
     try {
       const herdParams = getPostParams(community);
@@ -197,6 +197,8 @@ export default function App() {
         lat: location.lat,
         lng: location.lng,
         ...herdParams,
+        image_base64: imageBase64,
+        image_content_type: imageContentType,
       });
       setComposerOpen(false);
       setActiveTab('home');

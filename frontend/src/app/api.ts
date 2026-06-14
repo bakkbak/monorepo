@@ -56,6 +56,7 @@ export type FeedPost = {
   herd_id?: string;
   comment_count?: number;
   repost_count?: number;
+  image_url?: string | null;
 };
 
 export async function getFeed(params: {
@@ -82,16 +83,22 @@ export async function createPost(params: {
   lng: number;
   herd_type?: string;
   herd_id?: string;
+  image_base64?: string;
+  image_content_type?: string;
 }) {
-  const qs = new URLSearchParams({
-    device_id: params.device_id,
-    content: params.content,
-    lat: String(params.lat),
-    lng: String(params.lng),
+  return request<{ status: string }>(`/posts/`, {
+    method: 'POST',
+    body: JSON.stringify({
+      device_id: params.device_id,
+      content: params.content,
+      lat: params.lat,
+      lng: params.lng,
+      herd_type: params.herd_type || 'local',
+      herd_id: params.herd_id || null,
+      image_base64: params.image_base64 || null,
+      image_content_type: params.image_content_type || 'image/jpeg',
+    }),
   });
-  if (params.herd_type) qs.set('herd_type', params.herd_type);
-  if (params.herd_id) qs.set('herd_id', params.herd_id);
-  return request<{ status: string }>(`/posts/?${qs}`, { method: 'POST' });
 }
 
 export async function votePost(params: {

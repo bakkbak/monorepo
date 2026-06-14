@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, GraduationCap, CheckCircle, Loader2, Copy, Check } from 'lucide-react';
+import { X, GraduationCap, CheckCircle, Loader2 } from 'lucide-react';
 import { getDeviceStatus, requestVerification, confirmVerification } from '../api';
 
 type VerifyStep = 'idle' | 'email' | 'otp' | 'verified';
@@ -16,7 +16,6 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
   const [verifiedDomain, setVerifiedDomain] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   // Load current verification status
   useEffect(() => {
@@ -60,15 +59,6 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
     }
   };
 
-  const handleCopyId = () => {
-    if (!deviceId) return;
-    navigator.clipboard.writeText(deviceId).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  const shortId = deviceId ? `...${deviceId.slice(-8)}` : '—';
 
   return (
     <>
@@ -168,22 +158,6 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
             )}
           </div>
 
-          {/* Device ID */}
-          <div className="border-t border-gray-100 pt-5">
-            <h3 className="font-bold text-black mb-2 text-sm">Your Anonymous ID</h3>
-            <button
-              onClick={handleCopyId}
-              className="flex items-center gap-3 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 hover:bg-gray-100 transition-colors"
-            >
-              <span className="text-sm font-mono text-gray-700 flex-1 text-left">{shortId}</span>
-              {copied ? (
-                <Check className="w-4 h-4 text-green-500" />
-              ) : (
-                <Copy className="w-4 h-4 text-gray-400" />
-              )}
-            </button>
-            <p className="text-xs text-gray-400 mt-1.5 px-1">Tap to copy your full device ID</p>
-          </div>
         </div>
       </div>
     </>

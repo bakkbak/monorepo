@@ -69,14 +69,14 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl border-t-2 border-x-2 border-black z-50 pb-16">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl border-t-2 border-x-2 border-black z-50 pb-24">
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
+        <div className="flex justify-center pt-4 pb-2">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 pt-2 pb-5">
           <h2 className="text-xl font-bold text-black">Settings</h2>
           <button
             onClick={onClose}
@@ -86,10 +86,10 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
           </button>
         </div>
 
-        <div className="px-6 pt-2 pb-4 space-y-4">
+        <div className="px-6 pb-6">
           {/* University Verification */}
           <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex items-center gap-2.5 mb-5">
               <GraduationCap className="w-5 h-5 text-black" />
               <h3 className="font-bold text-black text-[15px]">University Verification</h3>
               {step === 'verified' && (
@@ -103,8 +103,8 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
                 <p className="text-xs text-green-600 mt-0.5">{verifiedDomain}</p>
               </div>
             ) : step === 'otp' ? (
-              <div className="space-y-3">
-                <p className="text-sm text-gray-500">
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 leading-relaxed">
                   OTP sent to <span className="font-medium text-black">{email}</span>. Check your inbox.
                 </p>
                 <input
@@ -134,8 +134,8 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-gray-500">
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 leading-relaxed">
                   Enter your university email to unlock the University herd.
                 </p>
                 <input
@@ -144,13 +144,13 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleRequestOtp()}
                   placeholder="you@university.edu"
-                  className="w-full border-2 border-black rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-yellow-400"
+                  className="w-full border-2 border-black rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400"
                 />
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <button
                   onClick={handleRequestOtp}
                   disabled={!email.includes('@') || loading}
-                  className="w-full py-3 rounded-xl border-2 border-black bg-yellow-400 text-black font-bold text-sm disabled:opacity-40 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl border-2 border-black bg-yellow-400 text-black font-bold text-sm disabled:opacity-40 flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send OTP'}
                 </button>

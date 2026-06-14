@@ -69,14 +69,14 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl border-t-2 border-x-2 border-black z-50 pb-10">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl border-t-2 border-x-2 border-black z-50 pb-16">
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4">
           <h2 className="text-xl font-bold text-black">Settings</h2>
           <button
             onClick={onClose}
@@ -86,12 +86,12 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
           </button>
         </div>
 
-        <div className="px-6 pt-5 space-y-6">
+        <div className="px-6 pt-2 pb-4 space-y-4">
           {/* University Verification */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex items-center gap-2.5 mb-4">
               <GraduationCap className="w-5 h-5 text-black" />
-              <h3 className="font-bold text-black">University Verification</h3>
+              <h3 className="font-bold text-black text-[15px]">University Verification</h3>
               {step === 'verified' && (
                 <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
               )}

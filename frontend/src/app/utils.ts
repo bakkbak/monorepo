@@ -18,6 +18,7 @@ export type HerdInfo = {
   emoji: string;
   herdId: string; // backend herd_id
   logo?: string;
+  isSchool?: boolean;
 };
 
 export const HERD_REGISTRY: Record<string, HerdInfo> = {
@@ -31,7 +32,7 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
   'swifties':        { displayName: 'Swifties',        emoji: '💜', herdId: 'swifties' },
   'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university' },
   'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
-  'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg' },
+  'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isSchool: true },
 };
 
 // Default herds every user gets
@@ -43,6 +44,8 @@ export function herdIdToDisplayName(herdId: string): string {
 }
 
 // Build feed options from joined herd IDs
+export const YOUR_SCHOOL_LABEL = 'Your School';
+
 export function buildFeedOptions(joinedHerdIds: string[]): string[] {
   const tabs = ['For you'];
   for (const hid of joinedHerdIds) {
@@ -50,7 +53,7 @@ export function buildFeedOptions(joinedHerdIds: string[]): string[] {
       tabs.push('University');
     } else {
       const info = HERD_REGISTRY[hid];
-      if (info) tabs.push(info.displayName);
+      if (info) tabs.push(info.isSchool ? YOUR_SCHOOL_LABEL : info.displayName);
     }
   }
   return tabs;
@@ -60,6 +63,7 @@ export function buildFeedOptions(joinedHerdIds: string[]): string[] {
 export function buildCommunities(joinedHerdIds: string[]): string[] {
   return joinedHerdIds.map((hid) => {
     const info = HERD_REGISTRY[hid];
+    if (info?.isSchool) return YOUR_SCHOOL_LABEL;
     return info ? info.displayName : hid;
   });
 }
@@ -68,7 +72,10 @@ export function buildCommunities(joinedHerdIds: string[]): string[] {
 export function getFeedParams(displayName: string): { herd_type: string; herd_id?: string } {
   if (displayName === 'For you') return { herd_type: 'local' };
   if (displayName === 'University') return { herd_type: 'university' };
-  // Find by display name
+  if (displayName === YOUR_SCHOOL_LABEL) {
+    const school = Object.values(HERD_REGISTRY).find((h) => h.isSchool);
+    if (school) return { herd_type: 'global', herd_id: school.herdId };
+  }
   const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
   if (entry) return { herd_type: 'global', herd_id: entry.herdId };
   return { herd_type: 'local' };
@@ -77,6 +84,10 @@ export function getFeedParams(displayName: string): { herd_type: string; herd_id
 // Get post creation params for a community display name
 export function getPostParams(displayName: string): { herd_type: string; herd_id?: string } {
   if (displayName === 'University') return { herd_type: 'university' };
+  if (displayName === YOUR_SCHOOL_LABEL) {
+    const school = Object.values(HERD_REGISTRY).find((h) => h.isSchool);
+    if (school) return { herd_type: 'global', herd_id: school.herdId };
+  }
   const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
   if (entry) return { herd_type: 'global', herd_id: entry.herdId };
   return { herd_type: 'local' };
@@ -87,12 +98,17 @@ export function buildCommunityEmojis(joinedHerdIds: string[]): Record<string, st
   const emojis: Record<string, string> = {};
   for (const [, info] of Object.entries(HERD_REGISTRY)) {
     emojis[info.displayName] = info.emoji;
+    if (info.isSchool) emojis[YOUR_SCHOOL_LABEL] = info.emoji;
   }
   return emojis;
 }
 
 // Get logo path for a community display name (if it has one)
 export function getCommunityLogo(displayName: string): string | undefined {
+  if (displayName === YOUR_SCHOOL_LABEL) {
+    const school = Object.values(HERD_REGISTRY).find((h) => h.isSchool);
+    return school?.logo;
+  }
   const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
   return entry?.logo;
 }
@@ -129,7 +145,8 @@ export function feedPostToPost(fp: FeedPost): Post {
 
   let community: string;
   if (fp.herd_id) {
-    community = herdIdToDisplayName(fp.herd_id);
+    const info = HERD_REGISTRY[fp.herd_id];
+    community = info?.isSchool ? YOUR_SCHOOL_LABEL : herdIdToDisplayName(fp.herd_id);
   } else if (fp.herd_type === 'university') {
     community = 'University';
   } else {

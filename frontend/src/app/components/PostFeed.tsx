@@ -1,7 +1,7 @@
 import { MessageCircle, Share2, ArrowUp, ArrowDown, Repeat2, RefreshCw, MoreHorizontal, Flag, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import type { Post } from '../utils';
-import { communityEmojis } from '../utils';
+import { communityEmojis, getCommunityLogo } from '../utils';
 import { votePost, reportPost } from '../api';
 
 const REPORT_REASONS = ['Spam', 'Harassment', 'Hate speech', 'Inappropriate content', 'Other'];
@@ -82,8 +82,12 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
       <div className="bg-white rounded-lg shadow-sm border-2 border-black mx-3">
         <div className="cursor-pointer" onClick={onClick}>
           <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-            <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl flex-shrink-0">
-              {communityEmojis[post.community] || '🛠️'}
+            <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+              {getCommunityLogo(post.community) ? (
+                <img src={getCommunityLogo(post.community)} alt={post.community} className="w-full h-full object-cover" />
+              ) : (
+                communityEmojis[post.community] || '🛠️'
+              )}
             </div>
             <div className="flex-1">
               <div className="font-bold text-gray-900">{post.community}</div>

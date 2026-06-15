@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { getMyPosts, getMyComments, getNotifications, markNotificationsRead, votePost } from '../api';
 import type { MyComment, Notification } from '../api';
 import { SettingsSheet } from './SettingsSheet';
-import { feedPostToPost, getTimeAgo, communityEmojis } from '../utils';
+import { feedPostToPost, getTimeAgo, communityEmojis, getCommunityLogo } from '../utils';
 import type { Post } from '../utils';
 
 type TabType = 'posts' | 'comments' | 'saved';
@@ -130,8 +130,12 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
 
           {/* Parent post context */}
           <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-sm flex-shrink-0">
-              {communityEmojis[community] || '📍'}
+            <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
+              {getCommunityLogo(community) ? (
+                <img src={getCommunityLogo(community)} alt={community} className="w-full h-full object-cover" />
+              ) : (
+                communityEmojis[community] || '📍'
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-500">{community}</p>
@@ -202,8 +206,12 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
           </div>
         )}
         <div className="flex items-center gap-3 px-4 pt-4 pb-3 cursor-pointer" onClick={() => onPostClick?.(post)}>
-          <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-lg">
-            {communityEmojis[post.community] || '🛠️'}
+          <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-lg overflow-hidden">
+            {getCommunityLogo(post.community) ? (
+              <img src={getCommunityLogo(post.community)} alt={post.community} className="w-full h-full object-cover" />
+            ) : (
+              communityEmojis[post.community] || '🛠️'
+            )}
           </div>
           <div className="flex-1">
             <div className="font-bold text-black">{post.community}</div>

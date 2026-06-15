@@ -17,6 +17,7 @@ export type HerdInfo = {
   displayName: string;
   emoji: string;
   herdId: string; // backend herd_id
+  logo?: string;
 };
 
 export const HERD_REGISTRY: Record<string, HerdInfo> = {
@@ -30,6 +31,7 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
   'swifties':        { displayName: 'Swifties',        emoji: '💜', herdId: 'swifties' },
   'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university' },
   'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
+  'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg' },
 };
 
 // Default herds every user gets
@@ -87,6 +89,12 @@ export function buildCommunityEmojis(joinedHerdIds: string[]): Record<string, st
     emojis[info.displayName] = info.emoji;
   }
   return emojis;
+}
+
+// Get logo path for a community display name (if it has one)
+export function getCommunityLogo(displayName: string): string | undefined {
+  const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
+  return entry?.logo;
 }
 
 // Legacy exports — still used by components that import these directly

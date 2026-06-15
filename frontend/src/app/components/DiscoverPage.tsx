@@ -92,6 +92,16 @@ const circles = [
     trending: true,
     color: 'bg-green-500',
     image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBzZXR1cHxlbnwxfHx8fDE2Nzc4MDg4MTd8MA&ixlib=rb-4.1.0&q=80&w=1080'
+  },
+  {
+    id: 11,
+    name: 'RVU',
+    emoji: '🎓',
+    logo: '/herds/rvu.svg',
+    members: '2K',
+    trending: false,
+    color: 'bg-amber-600',
+    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzfGVufDF8fHx8MTY3NzgwODgxN3ww&ixlib=rb-4.1.0&q=80&w=1080'
   }
 ];
 
@@ -186,8 +196,12 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
             {/* Content */}
             <div className="relative flex items-center gap-4 p-4">
               {/* Icon */}
-              <div className={`${circle.color} w-14 h-14 rounded-2xl border-2 border-black flex items-center justify-center text-2xl flex-shrink-0`}>
-                {circle.emoji}
+              <div className={`${circle.color} w-14 h-14 rounded-2xl border-2 border-black flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden`}>
+                {'logo' in circle && circle.logo ? (
+                  <img src={circle.logo} alt={circle.name} className="w-full h-full object-cover" />
+                ) : (
+                  circle.emoji
+                )}
               </div>
 
               {/* Info */}

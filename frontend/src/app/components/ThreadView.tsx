@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Post } from '../utils';
-import { getTimeAgo, communityEmojis } from '../utils';
+import { getTimeAgo, communityEmojis, getCommunityLogo } from '../utils';
 import { votePost, getComments, createComment, reportPost, type ApiComment } from '../api';
 
 type CommentTree = ApiComment & { replies: CommentTree[] };
@@ -181,8 +181,12 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
       {/* Original post */}
       <div className="px-4 pt-4 pb-3 border-b-2 border-gray-100">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl">
-            {communityEmojis[post.community] || '🛠️'}
+          <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl overflow-hidden">
+            {getCommunityLogo(post.community) ? (
+              <img src={getCommunityLogo(post.community)} alt={post.community} className="w-full h-full object-cover" />
+            ) : (
+              communityEmojis[post.community] || '🛠️'
+            )}
           </div>
           <div className="flex-1">
             <div className="font-bold text-gray-900">{post.community}</div>

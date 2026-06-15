@@ -30,7 +30,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       >
         Teevo
       </h1>
-      <p className="text-black/60 mt-3 text-lg">Your campus. Unfiltered.</p>
+      <p className="text-black/60 mt-3 text-lg">See what's brewing around campus</p>
     </div>
   );
 }

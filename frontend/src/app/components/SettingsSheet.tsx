@@ -136,7 +136,7 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Enter your university email to unlock the University herd.
+                  Enter your university email to join your campus circle
                 </p>
                 <input
                   type="email"

@@ -1,4 +1,4 @@
-import { Search, TrendingUp, Flame } from 'lucide-react';
+import { Search, TrendingUp, Flame, Settings, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { joinHerd, leaveHerd, getJoinedHerds } from '../api';
 
@@ -93,16 +93,6 @@ const circles = [
     color: 'bg-green-500',
     image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBzZXR1cHxlbnwxfHx8fDE2Nzc4MDg4MTd8MA&ixlib=rb-4.1.0&q=80&w=1080'
   },
-  {
-    id: 11,
-    name: 'RVU',
-    emoji: '🎓',
-    logo: '/herds/rvu.svg',
-    members: '2K',
-    trending: false,
-    color: 'bg-amber-600',
-    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzfGVufDF8fHx8MTY3NzgwODgxN3ww&ixlib=rb-4.1.0&q=80&w=1080'
-  }
 ];
 
 interface DiscoverPageProps {
@@ -112,6 +102,7 @@ interface DiscoverPageProps {
 
 export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
   const [joinedHerdIds, setJoinedHerdIds] = useState<Set<string>>(new Set());
+  const [showRvuDialog, setShowRvuDialog] = useState(false);
 
   // Load joined herds from backend
   useEffect(() => {
@@ -196,12 +187,8 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
             {/* Content */}
             <div className="relative flex items-center gap-4 p-4">
               {/* Icon */}
-              <div className={`${circle.color} w-14 h-14 rounded-2xl border-2 border-black flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden`}>
-                {'logo' in circle && circle.logo ? (
-                  <img src={circle.logo} alt={circle.name} className="w-full h-full object-cover" />
-                ) : (
-                  circle.emoji
-                )}
+              <div className={`${circle.color} w-14 h-14 rounded-2xl border-2 border-black flex items-center justify-center text-2xl flex-shrink-0`}>
+                {circle.emoji}
               </div>
 
               {/* Info */}
@@ -237,6 +224,81 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
           </div>
         ))}
       </div>
+
+      {/* Hidden gear for RVU access */}
+      <div className="flex justify-center py-6">
+        <button
+          onClick={() => setShowRvuDialog(true)}
+          className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+        >
+          <Settings className="w-5 h-5 text-gray-400" />
+        </button>
+      </div>
+
+      {/* RVU Dialog */}
+      {showRvuDialog && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowRvuDialog(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <div className="bg-white rounded-2xl border-2 border-black w-full max-w-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-black">
+                    <img src="/herds/rvu.svg" alt="RVU" className="w-full h-full object-cover" />
+                  </div>
+                  <h3 className="text-lg font-bold text-black">RVU</h3>
+                </div>
+                <button
+                  onClick={() => setShowRvuDialog(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <p className="px-5 pb-4 text-sm text-gray-500">
+                Join the RVU campus circle to see and post with your college community.
+              </p>
+              <div className="px-5 pb-5">
+                <button
+                  onClick={async () => {
+                    if (!deviceId) return;
+                    const isJoined = joinedHerdIds.has('rvu');
+                    setJoinedHerdIds((prev) => {
+                      const next = new Set(prev);
+                      if (isJoined) next.delete('rvu');
+                      else next.add('rvu');
+                      return next;
+                    });
+                    try {
+                      if (isJoined) {
+                        await leaveHerd({ device_id: deviceId, herd_id: 'rvu' });
+                      } else {
+                        await joinHerd({ device_id: deviceId, herd_id: 'rvu' });
+                      }
+                      onHerdsChanged?.();
+                    } catch {
+                      setJoinedHerdIds((prev) => {
+                        const next = new Set(prev);
+                        if (isJoined) next.add('rvu');
+                        else next.delete('rvu');
+                        return next;
+                      });
+                    }
+                    setShowRvuDialog(false);
+                  }}
+                  className={`w-full py-3 rounded-xl font-bold text-sm border-2 border-black transition-all ${
+                    joinedHerdIds.has('rvu')
+                      ? 'bg-gray-100 text-black'
+                      : 'bg-yellow-400 text-black'
+                  }`}
+                >
+                  {joinedHerdIds.has('rvu') ? 'Leave RVU' : 'Join RVU'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

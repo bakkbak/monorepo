@@ -66,8 +66,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
   }, [deviceId, showNotifications]);
 
   const HERD_ID_DISPLAY: Record<string, string> = {
-    ipl: 'IPL',
-    bollywood: 'Bollywood',
+    rvu: 'RVU',
   };
 
   const commentToCommunity = (c: MyComment): string => {

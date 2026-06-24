@@ -19,7 +19,7 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-export function PostComposer({ onClose, onPost, communities = ['University', 'IPL', 'Bollywood'] }: PostComposerProps) {
+export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostComposerProps) {
   const [text, setText] = useState('');
   const [community, setCommunity] = useState(communities[0] || 'University');
   const [imageFile, setImageFile] = useState<File | null>(null);

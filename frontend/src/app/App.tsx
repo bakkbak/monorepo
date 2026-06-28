@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Home, Binoculars, User, Plus } from 'lucide-react';
 import { PostFeed } from './components/PostFeed';
 import { ProfilePage } from './components/ProfilePage';
@@ -6,9 +6,10 @@ import { DiscoverPage } from './components/DiscoverPage';
 import { ThreadView } from './components/ThreadView';
 import { PostComposer } from './components/PostComposer';
 import { SplashScreen } from './components/SplashScreen';
+import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
 import { getOrCreateDeviceId } from './device';
 import { getLocation, type Location } from './location';
-import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications } from './api';
+import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus } from './api';
 import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
@@ -29,14 +30,20 @@ export default function App() {
   const [repostedPosts, setRepostedPosts] = useState<Post[]>([]);
   const [repostedIds, setRepostedIds] = useState<Set<string>>(new Set());
 
+  // Per-herd feed cache for instant switching
+  const feedCache = useRef<Record<string, Post[]>>({});
+
   // Joined herds
   const [joinedHerdIds, setJoinedHerdIds] = useState<string[]>([]);
 
   // Unread notification count
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // University verification
+  const [isUniversityVerified, setIsUniversityVerified] = useState(false);
+
   const feedOptions = buildFeedOptions(joinedHerdIds);
-  const communities = buildCommunities(joinedHerdIds);
+  const communities = buildCommunities(joinedHerdIds, isUniversityVerified);
 
   // Load joined herds + auto-join defaults
   const refreshJoinedHerds = useCallback(async () => {
@@ -78,6 +85,14 @@ export default function App() {
     const interval = setInterval(refreshUnreadCount, 30000);
     return () => clearInterval(interval);
   }, [refreshUnreadCount]);
+
+  // Check university verification status
+  useEffect(() => {
+    if (!deviceId) return;
+    getDeviceStatus(deviceId)
+      .then((s) => { if (s.verified_university) setIsUniversityVerified(true); })
+      .catch(() => {});
+  }, [deviceId]);
 
   // Load reposts from backend on init
   useEffect(() => {
@@ -137,7 +152,12 @@ export default function App() {
 
   const loadFeed = useCallback(async () => {
     if (!deviceId || !location) return;
-    setFeedLoading(true);
+    const cached = feedCache.current[selectedFeed];
+    if (cached) {
+      setPosts(cached);
+    } else {
+      setFeedLoading(true);
+    }
     setFeedError(null);
     try {
       const herdParams = getFeedParams(selectedFeed);
@@ -147,9 +167,11 @@ export default function App() {
         lng: location.lng,
         ...herdParams,
       });
-      setPosts(data.map(feedPostToPost));
+      const mapped = data.map(feedPostToPost);
+      feedCache.current[selectedFeed] = mapped;
+      setPosts(mapped);
     } catch (err: any) {
-      setFeedError(err.message);
+      if (!cached) setFeedError(err.message);
     } finally {
       setFeedLoading(false);
     }
@@ -238,23 +260,25 @@ export default function App() {
       )}
 
       <div className="pb-4">
-        {activeTab === 'home' && selectedFeed === 'University' ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <span className="text-5xl mb-4">🏛️</span>
-            <p className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>University Herd</p>
-            <p className="text-gray-500">Coming soon! We're setting this up.</p>
-          </div>
-        ) : activeTab === 'home' && (
-          <PostFeed
-            posts={posts}
-            loading={feedLoading}
-            error={feedError}
-            deviceId={deviceId}
-            onPostClick={(post: Post) => setViewingPost(post)}
-            onRetry={loadFeed}
-            onRepost={handleRepost}
-            isReposted={isReposted}
-          />
+        {activeTab === 'home' && (
+          <>
+            {selectedFeed === 'University' && !isUniversityVerified && (
+              <UniversityVerifyPrompt
+                deviceId={deviceId}
+                onVerified={() => setIsUniversityVerified(true)}
+              />
+            )}
+            <PostFeed
+              posts={posts}
+              loading={feedLoading}
+              error={feedError}
+              deviceId={deviceId}
+              onPostClick={(post: Post) => setViewingPost(post)}
+              onRetry={loadFeed}
+              onRepost={handleRepost}
+              isReposted={isReposted}
+            />
+          </>
         )}
         {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
         {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} />}

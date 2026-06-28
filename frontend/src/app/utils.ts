@@ -44,24 +44,24 @@ export function herdIdToDisplayName(herdId: string): string {
 
 // Build feed options from joined herd IDs
 export function buildFeedOptions(joinedHerdIds: string[]): string[] {
-  const tabs = ['For you'];
+  const tabs = ['For you', 'University'];
   for (const hid of joinedHerdIds) {
-    if (hid === 'university') {
-      tabs.push('University');
-    } else {
-      const info = HERD_REGISTRY[hid];
-      if (info) tabs.push(info.displayName);
-    }
+    if (hid === 'university') continue;
+    const info = HERD_REGISTRY[hid];
+    if (info) tabs.push(info.displayName);
   }
   return tabs;
 }
 
 // Build community list for post composer from joined herd IDs
-export function buildCommunities(joinedHerdIds: string[]): string[] {
-  return joinedHerdIds.map((hid) => {
-    const info = HERD_REGISTRY[hid];
-    return info ? info.displayName : hid;
-  });
+// University is excluded unless the device is verified
+export function buildCommunities(joinedHerdIds: string[], isUniversityVerified = false): string[] {
+  return joinedHerdIds
+    .filter((hid) => hid !== 'university' || isUniversityVerified)
+    .map((hid) => {
+      const info = HERD_REGISTRY[hid];
+      return info ? info.displayName : hid;
+    });
 }
 
 // Get feed query params for a display name

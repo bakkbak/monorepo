@@ -215,19 +215,9 @@ def get_feed(
 
     elif herd_type == "university":
         record = db.execute(
-            text("""
-                SELECT verified_university, university_domain
-                FROM devices
-                WHERE id = :id
-            """),
+            text("SELECT university_domain FROM devices WHERE id = :id"),
             {"id": device_id}
         ).fetchone()
-
-        if not record or not record.verified_university:
-            raise HTTPException(
-                status_code=403,
-                detail="University verification required"
-            )
 
         posts = db.execute(
             text("""
@@ -250,12 +240,15 @@ def get_feed(
                 LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
                     ON p.id = rc.post_id
                 WHERE p.herd_type = 'university'
-                  AND p.university_domain = :domain
+                  AND (
+                      :domain IS NULL
+                      OR p.university_domain = :domain
+                  )
                   AND p.is_hidden = FALSE
                 ORDER BY score DESC
                 LIMIT 50
                 """),
-            {"domain": record.university_domain}
+            {"domain": record.university_domain if record else None}
         ).fetchall()
 
     else:

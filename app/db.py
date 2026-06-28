@@ -1,10 +1,11 @@
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 database_url = os.environ["DATABASE_URL"]
 
-engine = create_engine(database_url)
+engine = create_engine(database_url, poolclass=NullPool)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

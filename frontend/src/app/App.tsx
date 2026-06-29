@@ -156,6 +156,7 @@ export default function App() {
     if (cached) {
       setPosts(cached);
     } else {
+      setPosts([]);
       setFeedLoading(true);
     }
     setFeedError(null);
@@ -284,7 +285,7 @@ export default function App() {
 
       <div className="pb-4">
         {activeTab === 'home' && (
-          <>
+          <div key={selectedFeed} className="animate-fade-in">
             {selectedFeed === 'University' && !isUniversityVerified && (
               <UniversityVerifyPrompt
                 deviceId={deviceId}
@@ -301,7 +302,7 @@ export default function App() {
               onRepost={handleRepost}
               isReposted={isReposted}
             />
-          </>
+          </div>
         )}
         {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
         {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} />}

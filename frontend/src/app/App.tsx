@@ -182,6 +182,29 @@ export default function App() {
   }, [loadFeed]);
 
   useEffect(() => {
+    if (!deviceId || !location) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible' && activeTab === 'home') {
+        loadFeed();
+      }
+    }, 30_000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && activeTab === 'home') {
+        feedCache.current = {};
+        loadFeed();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [deviceId, location, activeTab, loadFeed]);
+
+  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY && currentScrollY > 50) {

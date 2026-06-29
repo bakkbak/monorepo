@@ -122,6 +122,7 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [reported, setReported] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const voteCount =
     post.upvotes - post.downvotes + (vote === 'up' ? 1 : vote === 'down' ? -1 : 0);
@@ -137,7 +138,8 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
   }, [post.id]);
 
   const handleReply = async () => {
-    if (!replyText.trim() || !deviceId) return;
+    if (!replyText.trim() || !deviceId || submitting) return;
+    setSubmitting(true);
     try {
       await createComment({
         post_id: post.id,
@@ -151,6 +153,8 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
       setComments(buildCommentTree(data));
     } catch {
       // silently fail
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -332,15 +336,15 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
             type="text"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleReply()}
+            onKeyDown={(e) => e.key === 'Enter' && !submitting && handleReply()}
             placeholder={replyingTo ? 'Reply to comment...' : 'Reply anonymously...'}
             className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 border-2 border-transparent focus:border-yellow-400"
           />
           <button
             onClick={handleReply}
-            disabled={!replyText.trim()}
+            disabled={!replyText.trim() || submitting}
             className={`p-2.5 rounded-full transition-all active:scale-90 ${
-              replyText.trim()
+              replyText.trim() && !submitting
                 ? 'bg-yellow-400 text-black'
                 : 'bg-gray-200 text-gray-400'
             }`}

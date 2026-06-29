@@ -24,6 +24,7 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
   const [community, setCommunity] = useState(communities[0] || 'University');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxChars = 280;
 
@@ -55,16 +56,22 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
 
   const handlePost = async () => {
     if (!text.trim() && !imageFile) return;
+    if (submitting) return;
+    setSubmitting(true);
 
-    let base64: string | undefined;
-    let contentType: string | undefined;
+    try {
+      let base64: string | undefined;
+      let contentType: string | undefined;
 
-    if (imageFile) {
-      base64 = await fileToBase64(imageFile);
-      contentType = imageFile.type;
+      if (imageFile) {
+        base64 = await fileToBase64(imageFile);
+        contentType = imageFile.type;
+      }
+
+      onPost(text.trim(), community, base64, contentType);
+    } finally {
+      setSubmitting(false);
     }
-
-    onPost(text.trim(), community, base64, contentType);
   };
 
   const canPost = text.trim() || imageFile;
@@ -168,14 +175,14 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
         <div className="px-5 pt-2 pb-24 flex-shrink-0">
           <button
             onClick={handlePost}
-            disabled={!canPost}
+            disabled={!canPost || submitting}
             className={`w-full py-3.5 rounded-xl font-bold text-base border-2 border-black transition-all active:scale-[0.98] ${
-              canPost
+              canPost && !submitting
                 ? 'bg-yellow-400 text-black hover:bg-yellow-500'
                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
             }`}
           >
-            Post
+            {submitting ? 'Posting...' : 'Post'}
           </button>
         </div>
       </div>

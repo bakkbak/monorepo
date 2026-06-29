@@ -94,6 +94,21 @@ def create_comment(
         if not parent:
             raise HTTPException(status_code=404, detail="Parent comment not found")
 
+    recent_dup = db.execute(
+        text("""
+            SELECT 1 FROM comments
+            WHERE device_id = :device_id
+              AND post_id = :post_id
+              AND content = :content
+              AND created_at > NOW() - INTERVAL '30 seconds'
+            LIMIT 1
+        """),
+        {"device_id": device_id, "post_id": post_id, "content": content}
+    ).fetchone()
+
+    if recent_dup:
+        raise HTTPException(status_code=429, detail="Duplicate comment detected")
+
     comment_id = str(uuid.uuid4())
 
     db.execute(

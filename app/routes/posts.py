@@ -76,6 +76,20 @@ def create_post(
     elif herd_type != "local":
         raise HTTPException(status_code=400, detail="Invalid herd type")
 
+    recent_dup = db.execute(
+        text("""
+            SELECT 1 FROM posts
+            WHERE device_id = :device_id
+              AND content = :content
+              AND created_at > NOW() - INTERVAL '30 seconds'
+            LIMIT 1
+        """),
+        {"device_id": body.device_id, "content": body.content}
+    ).fetchone()
+
+    if recent_dup:
+        raise HTTPException(status_code=429, detail="Duplicate post detected")
+
     image_bytes = None
     if body.image_base64:
         try:

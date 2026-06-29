@@ -210,9 +210,11 @@ export default function App() {
 
   const handleNewPost = async (text: string, community: string, imageBase64?: string, imageContentType?: string) => {
     if (!deviceId || !location) return;
+    const herdParams = getPostParams(community);
+    if (!herdParams) return;
+    setComposerOpen(false);
+    setActiveTab('home');
     try {
-      const herdParams = getPostParams(community);
-      if (!herdParams) return;
       await createPost({
         device_id: deviceId,
         content: text,
@@ -222,8 +224,6 @@ export default function App() {
         image_base64: imageBase64,
         image_content_type: imageContentType,
       });
-      setComposerOpen(false);
-      setActiveTab('home');
       loadFeed();
     } catch (err: any) {
       alert(err.message);

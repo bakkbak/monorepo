@@ -163,14 +163,10 @@ def get_feed(
                     p.herd_id,
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                    COALESCE(cc.cnt, 0) AS comment_count,
-                    COALESCE(rc.cnt, 0) AS repost_count,
+                    (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                    (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
                     p.image_url
                 FROM posts p
-                LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
-                    ON p.id = cc.post_id
-                LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
-                    ON p.id = rc.post_id
                 WHERE p.herd_id = :herd_id
                   AND p.is_hidden = FALSE
                 ORDER BY score DESC
@@ -195,16 +191,12 @@ def get_feed(
                 p.herd_id,
                 CAST((p.upvotes - p.downvotes) AS FLOAT) /
                 (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                COALESCE(cc.cnt, 0) AS comment_count,
-                COALESCE(rc.cnt, 0) AS repost_count,
-                    p.image_url
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                p.image_url
             FROM posts p
             INNER JOIN herd_memberships hm
                 ON p.herd_id = hm.herd_id AND hm.device_id = :device_id
-            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
-                ON p.id = cc.post_id
-            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
-                ON p.id = rc.post_id
             WHERE p.is_hidden = FALSE
               AND p.herd_id IS NOT NULL
             ORDER BY score DESC
@@ -231,14 +223,10 @@ def get_feed(
                     p.herd_id,
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                    COALESCE(cc.cnt, 0) AS comment_count,
-                    COALESCE(rc.cnt, 0) AS repost_count,
+                    (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                    (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
                     p.image_url
                 FROM posts p
-                LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
-                    ON p.id = cc.post_id
-                LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
-                    ON p.id = rc.post_id
                 WHERE p.herd_type = 'university'
                   AND (
                       :domain IS NULL
@@ -346,14 +334,10 @@ def get_my_posts(
                 p.downvotes,
                 p.herd_type,
                 p.herd_id,
-                COALESCE(cc.cnt, 0) AS comment_count,
-                COALESCE(rc.cnt, 0) AS repost_count,
-                    p.image_url
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                p.image_url
             FROM posts p
-            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
-                ON p.id = cc.post_id
-            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
-                ON p.id = rc.post_id
             WHERE p.device_id = :device_id
               AND p.is_hidden = FALSE
             ORDER BY p.created_at DESC
@@ -424,15 +408,11 @@ def get_my_reposts(
                 p.downvotes,
                 p.herd_type,
                 p.herd_id,
-                COALESCE(cc.cnt, 0) AS comment_count,
-                COALESCE(rc.cnt, 0) AS repost_count,
-                    p.image_url
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                (SELECT COUNT(*) FROM reposts rr WHERE rr.post_id = p.id) AS repost_count,
+                p.image_url
             FROM reposts r
             JOIN posts p ON p.id = r.post_id
-            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM comments GROUP BY post_id) cc
-                ON p.id = cc.post_id
-            LEFT JOIN (SELECT post_id, COUNT(*) AS cnt FROM reposts GROUP BY post_id) rc
-                ON p.id = rc.post_id
             WHERE r.device_id = :device_id
               AND p.is_hidden = FALSE
             ORDER BY r.created_at DESC

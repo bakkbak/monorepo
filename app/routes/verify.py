@@ -2,7 +2,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import uuid
 import random
@@ -68,7 +68,7 @@ def request_verification(
     otp = str(random.randint(100000, 999999))
     otp_hash = hashlib.sha256(otp.encode()).hexdigest()
 
-    expires_at = datetime.utcnow() + timedelta(minutes=10)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
     # delete old attempts
     db.execute(
@@ -127,7 +127,7 @@ def confirm_verification(
     if not record:
         raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    if record.expires_at < datetime.utcnow():
+    if record.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="OTP expired")
 
     # mark device verified

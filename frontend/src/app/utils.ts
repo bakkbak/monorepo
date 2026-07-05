@@ -45,13 +45,18 @@ export function herdIdToDisplayName(herdId: string): string {
 
 // Build feed options from joined herd IDs
 export function buildFeedOptions(joinedHerdIds: string[]): string[] {
-  const tabs = ['For you', 'University'];
+  const tabs = ['For you'];
   for (const hid of joinedHerdIds) {
-    if (HERD_REGISTRY[hid]?.isUniversityHerd) continue;
+    if (hid === 'university') continue;
     const info = HERD_REGISTRY[hid];
     if (info) tabs.push(info.displayName);
   }
   return tabs;
+}
+
+export function isUniversityFeed(displayName: string): boolean {
+  const entry = Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
+  return entry?.isUniversityHerd ?? false;
 }
 
 // Build community list for post composer from joined herd IDs

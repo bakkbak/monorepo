@@ -10,7 +10,7 @@ import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
 import { getOrCreateDeviceId } from './device';
 import { getLocation, type Location } from './location';
 import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus } from './api';
-import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, DEFAULT_HERD_IDS, type Post } from './utils';
+import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, isUniversityFeed, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
 export default function App() {
@@ -286,7 +286,7 @@ export default function App() {
       <div className="pb-4">
         {activeTab === 'home' && (
           <div key={selectedFeed} className="animate-fade-in">
-            {selectedFeed === 'University' && !isUniversityVerified && (
+            {isUniversityFeed(selectedFeed) && !isUniversityVerified && (
               <UniversityVerifyPrompt
                 deviceId={deviceId}
                 onVerified={() => setIsUniversityVerified(true)}

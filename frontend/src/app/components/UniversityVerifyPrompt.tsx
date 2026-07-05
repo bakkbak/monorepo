@@ -14,6 +14,8 @@ export function UniversityVerifyPrompt({ deviceId, onVerified }: Props) {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendFailed, setResendFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSendOtp = async () => {
@@ -27,6 +29,20 @@ export function UniversityVerifyPrompt({ deviceId, onVerified }: Props) {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!deviceId || !email.trim()) return;
+    setError(null);
+    setResendFailed(false);
+    setResendLoading(true);
+    try {
+      await requestVerification(deviceId, email.trim().toLowerCase());
+    } catch {
+      setResendFailed(true);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -120,7 +136,27 @@ export function UniversityVerifyPrompt({ deviceId, onVerified }: Props) {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
           </button>
           <button
-            onClick={() => { setStep('email'); setOtp(''); setError(null); }}
+            onClick={handleResend}
+            disabled={resendLoading}
+            className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1 disabled:opacity-40 flex items-center justify-center gap-1"
+          >
+            {resendLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+            {resendLoading ? 'Sending...' : 'Resend OTP'}
+          </button>
+          {resendFailed && (
+            <p className="text-xs text-red-500 text-center">
+              Couldn't send the code. Try a{' '}
+              <button
+                onClick={() => { setStep('email'); setOtp(''); setError(null); setResendFailed(false); }}
+                className="underline font-medium"
+              >
+                different email
+              </button>
+              .
+            </p>
+          )}
+          <button
+            onClick={() => { setStep('email'); setOtp(''); setError(null); setResendFailed(false); }}
             className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1"
           >
             Use a different email

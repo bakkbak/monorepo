@@ -18,6 +18,7 @@ export type HerdInfo = {
   emoji: string;
   herdId: string; // backend herd_id
   logo?: string;
+  isUniversityHerd?: boolean; // merged under the University tab
 };
 
 export const HERD_REGISTRY: Record<string, HerdInfo> = {
@@ -29,9 +30,9 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
   'pokemon':         { displayName: 'Pokemon',         emoji: '⚡', herdId: 'pokemon' },
   'music':           { displayName: 'Music',           emoji: '🎵', herdId: 'music' },
   'swifties':        { displayName: 'Swifties',        emoji: '💜', herdId: 'swifties' },
-  'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university' },
+  'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university', isUniversityHerd: true },
   'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
-  'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg' },
+  'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isUniversityHerd: true },
 };
 
 // Default herds every user gets
@@ -46,7 +47,7 @@ export function herdIdToDisplayName(herdId: string): string {
 export function buildFeedOptions(joinedHerdIds: string[]): string[] {
   const tabs = ['For you', 'University'];
   for (const hid of joinedHerdIds) {
-    if (hid === 'university') continue;
+    if (HERD_REGISTRY[hid]?.isUniversityHerd) continue;
     const info = HERD_REGISTRY[hid];
     if (info) tabs.push(info.displayName);
   }

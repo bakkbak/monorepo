@@ -7,34 +7,32 @@ import hashlib
 import uuid
 import random
 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import resend
 
 from ..deps import get_db
 
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
-SENDGRID_FROM = os.environ.get("SENDGRID_FROM_EMAIL", "noreply@bakkbak.com")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+RESEND_FROM = os.environ.get("RESEND_FROM_EMAIL", "noreply@teevo.in")
 
 
 def _send_otp_email(to_email: str, otp: str):
-    if not SENDGRID_API_KEY:
+    if not RESEND_API_KEY:
         print(f"[DEV OTP] {to_email} → {otp}")
         return
-    message = Mail(
-        from_email=SENDGRID_FROM,
-        to_emails=to_email,
-        subject="Your BakBak verification code",
-        html_content=(
-            f"<p>Your BakBak university verification code is:</p>"
-            f"<h2 style='letter-spacing:4px'>{otp}</h2>"
-            f"<p>This code expires in 10 minutes. Do not share it with anyone.</p>"
-        ),
-    )
+    resend.api_key = RESEND_API_KEY
     try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        sg.send(message)
+        resend.Emails.send({
+            "from": RESEND_FROM,
+            "to": to_email,
+            "subject": "Your Teevo verification code",
+            "html": (
+                f"<p>Your Teevo university verification code is:</p>"
+                f"<h2 style='letter-spacing:4px'>{otp}</h2>"
+                f"<p>This code expires in 10 minutes. Do not share it with anyone.</p>"
+            ),
+        })
     except Exception as e:
-        print(f"[SendGrid error] {e}")
+        print(f"[Resend error] {e}")
         raise HTTPException(status_code=500, detail="Failed to send OTP email")
 
 router = APIRouter()

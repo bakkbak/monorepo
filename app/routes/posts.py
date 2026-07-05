@@ -250,7 +250,7 @@ def get_feed(
                 ORDER BY score DESC
                 LIMIT 50
                 """),
-            {"domain": record.university_domain if record else None}
+            {"domain": None if (record and record.university_domain == "teevo.in") else (record.university_domain if record else None)}
         ).fetchall()
 
     else:

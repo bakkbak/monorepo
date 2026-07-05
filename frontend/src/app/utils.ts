@@ -63,7 +63,7 @@ export function isUniversityFeed(displayName: string): boolean {
 // University is excluded unless the device is verified
 export function buildCommunities(joinedHerdIds: string[], isUniversityVerified = false): string[] {
   return joinedHerdIds
-    .filter((hid) => hid !== 'university' || isUniversityVerified)
+    .filter((hid) => !HERD_REGISTRY[hid]?.isUniversityHerd || isUniversityVerified)
     .map((hid) => {
       const info = HERD_REGISTRY[hid];
       return info ? info.displayName : hid;

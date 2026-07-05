@@ -23,6 +23,9 @@ class CreatePostBody(BaseModel):
     image_base64: Optional[str] = None
     image_content_type: str = "image/jpeg"
 
+# Herd IDs that require university verification to post
+UNIVERSITY_HERD_IDS = {"rvu"}
+
 router = APIRouter()
 
 def auto_hide_if_needed(post_id: str, db: Session):
@@ -56,6 +59,13 @@ def create_post(
 
     if body.herd_id:
         herd_type = "global"
+        if body.herd_id in UNIVERSITY_HERD_IDS:
+            record = db.execute(
+                text("SELECT verified_university FROM devices WHERE id = :id"),
+                {"id": body.device_id}
+            ).fetchone()
+            if not record or not record.verified_university:
+                raise HTTPException(status_code=403, detail="University verification required")
     elif herd_type == "university":
         record = db.execute(
             text("""

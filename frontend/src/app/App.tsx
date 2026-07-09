@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Home, Binoculars, User, Plus } from 'lucide-react';
+import { Home, Binoculars, User, Plus, Flame } from 'lucide-react';
 import { PostFeed } from './components/PostFeed';
 import { ProfilePage } from './components/ProfilePage';
 import { DiscoverPage } from './components/DiscoverPage';
 import { ThreadView } from './components/ThreadView';
 import { PostComposer } from './components/PostComposer';
+import { TrendingPage } from './components/TrendingPage';
 import { SplashScreen } from './components/SplashScreen';
 import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
 import { getOrCreateDeviceId } from './device';
@@ -304,6 +305,7 @@ export default function App() {
             />
           </div>
         )}
+        {activeTab === 'trending' && <TrendingPage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} onRepost={handleRepost} isReposted={isReposted} />}
         {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
         {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} />}
       </div>
@@ -339,6 +341,15 @@ export default function App() {
             <span className="text-xs mt-1 font-medium">Home</span>
           </button>
           <button
+            onClick={() => setActiveTab('trending')}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 ${
+              activeTab === 'trending' ? 'text-black' : 'text-gray-700'
+            }`}
+          >
+            <Flame className="w-6 h-6" />
+            <span className="text-xs mt-1 font-medium">Trending</span>
+          </button>
+          <button
             onClick={() => setActiveTab('discover')}
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors active:scale-95 ${
               activeTab === 'discover' ? 'text-black' : 'text-gray-700'
@@ -368,3 +379,4 @@ export default function App() {
     </div>
   );
 }
+

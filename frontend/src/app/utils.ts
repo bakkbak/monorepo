@@ -18,7 +18,7 @@ export type HerdInfo = {
   emoji: string;
   herdId: string; // backend herd_id
   logo?: string;
-  isUniversityHerd?: boolean; // merged under the University tab
+  isUniversityHerd?: boolean;
 };
 
 export const HERD_REGISTRY: Record<string, HerdInfo> = {
@@ -37,6 +37,11 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
 
 // Default herds every user gets
 export const DEFAULT_HERD_IDS = ['rvu'];
+
+// All herds flagged as university/school herds (used by Trending page)
+export function getUniversityHerdIds(): string[] {
+  return Object.values(HERD_REGISTRY).filter((h) => h.isUniversityHerd).map((h) => h.herdId);
+}
 
 // Convert herd_id to display name
 export function herdIdToDisplayName(herdId: string): string {

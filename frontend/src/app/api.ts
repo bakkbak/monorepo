@@ -77,6 +77,11 @@ export async function getFeed(params: {
   return request<FeedPost[]>(`/posts/feed?${qs}`);
 }
 
+export async function getTrendingFeed(device_id: string) {
+  const qs = new URLSearchParams({ device_id });
+  return request<FeedPost[]>(`/posts/trending?${qs}`);
+}
+
 export async function createPost(params: {
   device_id: string;
   content: string;

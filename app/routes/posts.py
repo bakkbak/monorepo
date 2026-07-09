@@ -12,6 +12,8 @@ import uuid
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
+UNIVERSITY_HERD_IDS = ['rvu']
+
 
 class CreatePostBody(BaseModel):
     device_id: str
@@ -22,9 +24,6 @@ class CreatePostBody(BaseModel):
     herd_id: Optional[str] = None
     image_base64: Optional[str] = None
     image_content_type: str = "image/jpeg"
-
-# Herd IDs that require university verification to post
-UNIVERSITY_HERD_IDS = {"rvu"}
 
 router = APIRouter()
 
@@ -265,6 +264,41 @@ def get_feed(
 
     else:
         raise HTTPException(status_code=400, detail="Invalid herd type")
+
+    return [dict(p._mapping) for p in posts]
+
+@router.get("/trending")
+def get_trending(
+    device_id: str,
+    db: Session = Depends(get_db)
+):
+    posts = db.execute(
+        text("""
+            SELECT
+                p.id,
+                p.content,
+                p.created_at,
+                p.upvotes,
+                p.downvotes,
+                p.herd_type,
+                p.herd_id,
+                CAST(
+                    (p.upvotes - p.downvotes)
+                    + 2 * (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)
+                    + 3 * (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id)
+                AS FLOAT) /
+                (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
+                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+                (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                p.image_url
+            FROM posts p
+            WHERE p.herd_id = ANY(:herd_ids)
+              AND p.is_hidden = FALSE
+            ORDER BY score DESC
+            LIMIT 50
+        """),
+        {"herd_ids": UNIVERSITY_HERD_IDS}
+    ).fetchall()
 
     return [dict(p._mapping) for p in posts]
 

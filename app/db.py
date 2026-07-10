@@ -147,4 +147,9 @@ def init_db():
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         """))
+        conn.execute(text("""
+            INSERT INTO university_domains (domain, active)
+            VALUES ('jgu.edu.in', TRUE)
+            ON CONFLICT (domain) DO NOTHING
+        """))
         conn.commit()

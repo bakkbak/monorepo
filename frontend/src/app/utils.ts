@@ -33,10 +33,11 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
   'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university', isUniversityHerd: true },
   'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
   'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isUniversityHerd: true },
+  'opj':             { displayName: 'OPJ',             emoji: '🏫', herdId: 'opj', isUniversityHerd: true },
 };
 
 // Default herds every user gets
-export const DEFAULT_HERD_IDS = ['rvu'];
+export const DEFAULT_HERD_IDS = ['rvu', 'opj'];
 
 // All herds flagged as university/school herds (used by Trending page)
 export function getUniversityHerdIds(): string[] {
@@ -115,11 +116,13 @@ export const FEED_HERD_MAP: Record<string, { herd_type?: string; herd_id?: strin
   'For you': { herd_type: 'local' },
   'University': { herd_type: 'university' },
   'RVU': { herd_type: 'global', herd_id: 'rvu' },
+  'OPJ': { herd_type: 'global', herd_id: 'opj' },
 };
 
 export const COMMUNITY_HERD_MAP: Record<string, { herd_type: string; herd_id?: string }> = {
   'University': { herd_type: 'university' },
   'RVU': { herd_type: 'global', herd_id: 'rvu' },
+  'OPJ': { herd_type: 'global', herd_id: 'opj' },
 };
 
 export function getTimeAgo(dateStr: string): string {

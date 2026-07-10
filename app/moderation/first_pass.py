@@ -49,7 +49,6 @@ def _confidence_to_label(score: float) -> str:
 def run_first_pass(content: str) -> FirstPassResult:
     try:
         import bakbak_mod
-        from bakbak_mod.models import Verdict
     except ImportError:
         logger.warning("bakbak-mod not installed, skipping first-pass")
         return FirstPassResult(

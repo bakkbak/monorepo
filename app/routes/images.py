@@ -1,5 +1,4 @@
 import base64
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel

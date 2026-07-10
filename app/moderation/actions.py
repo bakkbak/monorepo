@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 
-def hide_and_notify(post_id: str, device_id: str, verdict: str, reason: str, db: Session):
+def hide_and_notify(
+    post_id: str, device_id: str, verdict: str, reason: str, db: Session
+):
     db.execute(
         text("UPDATE posts SET is_hidden = TRUE WHERE id = :id"),
         {"id": post_id},

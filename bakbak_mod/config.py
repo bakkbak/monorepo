@@ -57,7 +57,9 @@ LLM_REVIEW_THRESHOLD_HIGH: float = 0.85
 LLM_TIMEOUT: int = 10
 LLM_MAX_RETRIES: int = 1
 LLM_MAX_TEXT_LENGTH: int = 2000
-LLM_FORCE_REVIEW: bool = False  # When True, LLM reviews ALL messages (ignores trigger logic)
+LLM_FORCE_REVIEW: bool = (
+    False  # When True, LLM reviews ALL messages (ignores trigger logic)
+)
 
 AUDIT_LOG_ENABLED: bool = True
 AUDIT_LOG_PATH: Optional[str] = None

@@ -10,20 +10,16 @@ from bakbak_mod.models import Category, DetectorResult
 
 
 class BaseDetector(ABC):
+    @property
+    @abstractmethod
+    def category(self) -> Category: ...
 
     @property
     @abstractmethod
-    def category(self) -> Category:
-        ...
-
-    @property
-    @abstractmethod
-    def tier(self) -> int:
-        ...
+    def tier(self) -> int: ...
 
     @abstractmethod
-    def detect(self, text: str) -> DetectorResult:
-        ...
+    def detect(self, text: str) -> DetectorResult: ...
 
     def _no_match(self) -> DetectorResult:
         return DetectorResult(
@@ -34,7 +30,9 @@ class BaseDetector(ABC):
             detector_name=self.__class__.__name__,
         )
 
-    def _match(self, confidence: float, patterns: List[str], detail: str = "") -> DetectorResult:
+    def _match(
+        self, confidence: float, patterns: List[str], detail: str = ""
+    ) -> DetectorResult:
         return DetectorResult(
             category=self.category,
             tier=self.tier,

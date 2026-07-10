@@ -11,7 +11,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     with engine.connect() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS devices (
                 id TEXT PRIMARY KEY,
                 device_hash TEXT UNIQUE NOT NULL,
@@ -21,8 +22,10 @@ def init_db():
                 verification_status TEXT DEFAULT 'none',
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS posts (
                 id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -38,8 +41,10 @@ def init_db():
                 is_hidden BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS comments (
                 id TEXT PRIMARY KEY,
                 post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -50,24 +55,30 @@ def init_db():
                 upvotes INTEGER DEFAULT 0,
                 downvotes INTEGER DEFAULT 0
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS votes (
                 post_id TEXT NOT NULL,
                 device_id TEXT NOT NULL,
                 vote INTEGER NOT NULL,
                 PRIMARY KEY (post_id, device_id)
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS reports (
                 post_id TEXT NOT NULL,
                 device_id TEXT NOT NULL,
                 reason TEXT,
                 PRIMARY KEY (post_id, device_id)
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS email_verifications (
                 id TEXT PRIMARY KEY,
                 device_id TEXT NOT NULL,
@@ -76,49 +87,63 @@ def init_db():
                 otp TEXT NOT NULL,
                 expires_at TIMESTAMPTZ NOT NULL
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS university_domains (
                 domain TEXT PRIMARY KEY,
                 active BOOLEAN DEFAULT TRUE
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS herd_memberships (
                 device_id TEXT NOT NULL REFERENCES devices(id),
                 herd_id TEXT NOT NULL,
                 joined_at TIMESTAMPTZ DEFAULT NOW(),
                 PRIMARY KEY (device_id, herd_id)
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS reposts (
                 post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
                 device_id TEXT NOT NULL REFERENCES devices(id),
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 PRIMARY KEY (post_id, device_id)
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS comment_votes (
                 comment_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
                 device_id TEXT NOT NULL REFERENCES devices(id),
                 vote INTEGER NOT NULL,
                 PRIMARY KEY (comment_id, device_id)
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_url TEXT
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS post_images (
                 post_id TEXT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
                 data BYTEA NOT NULL,
                 content_type TEXT NOT NULL DEFAULT 'image/jpeg',
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS moderation_logs (
                 id TEXT PRIMARY KEY,
                 post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -134,8 +159,10 @@ def init_db():
                 error TEXT,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY,
                 device_id TEXT NOT NULL REFERENCES devices(id),
@@ -146,10 +173,13 @@ def init_db():
                 is_read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             INSERT INTO university_domains (domain, active)
             VALUES ('jgu.edu.in', TRUE)
             ON CONFLICT (domain) DO NOTHING
-        """))
+        """)
+        )
         conn.commit()

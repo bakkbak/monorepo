@@ -6,7 +6,6 @@ from bakbak_mod.models import Category, DetectorResult
 
 
 class SelfHarmDetector(BaseDetector):
-
     def __init__(self):
         data = self._load_json(DATA_DIR / "self_harm_terms.json")
         self._patterns = data.get("patterns", [])

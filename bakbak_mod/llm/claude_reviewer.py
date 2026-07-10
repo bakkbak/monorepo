@@ -32,7 +32,6 @@ _VERDICT_MAP = {
 
 
 class ClaudeReviewer:
-
     def __init__(
         self,
         api_key: str,
@@ -52,12 +51,14 @@ class ClaudeReviewer:
     def _get_sync_client(self):
         if self._sync_client is None:
             import anthropic
+
             self._sync_client = anthropic.Anthropic(api_key=self._api_key)
         return self._sync_client
 
     def _get_async_client(self):
         if self._async_client is None:
             import anthropic
+
             self._async_client = anthropic.AsyncAnthropic(api_key=self._api_key)
         return self._async_client
 
@@ -95,9 +96,13 @@ class ClaudeReviewer:
                     "output_tokens": response.usage.output_tokens,
                 }
                 if hasattr(response.usage, "cache_read_input_tokens"):
-                    usage["cache_read_input_tokens"] = response.usage.cache_read_input_tokens
+                    usage["cache_read_input_tokens"] = (
+                        response.usage.cache_read_input_tokens
+                    )
                 if hasattr(response.usage, "cache_creation_input_tokens"):
-                    usage["cache_creation_input_tokens"] = response.usage.cache_creation_input_tokens
+                    usage["cache_creation_input_tokens"] = (
+                        response.usage.cache_creation_input_tokens
+                    )
                 return response_text, usage
             except Exception as e:
                 last_error = e
@@ -131,9 +136,13 @@ class ClaudeReviewer:
                     "output_tokens": response.usage.output_tokens,
                 }
                 if hasattr(response.usage, "cache_read_input_tokens"):
-                    usage["cache_read_input_tokens"] = response.usage.cache_read_input_tokens
+                    usage["cache_read_input_tokens"] = (
+                        response.usage.cache_read_input_tokens
+                    )
                 if hasattr(response.usage, "cache_creation_input_tokens"):
-                    usage["cache_creation_input_tokens"] = response.usage.cache_creation_input_tokens
+                    usage["cache_creation_input_tokens"] = (
+                        response.usage.cache_creation_input_tokens
+                    )
                 return response_text, usage
             except Exception as e:
                 last_error = e
@@ -144,7 +153,9 @@ class ClaudeReviewer:
         logger.warning("Claude API async error after retries: %s", last_error)
         return None
 
-    def _parse_response(self, response_text: str) -> Tuple[List[DetectorResult], Verdict]:
+    def _parse_response(
+        self, response_text: str
+    ) -> Tuple[List[DetectorResult], Verdict]:
         """Parse Claude's JSON response into DetectorResults and a Verdict.
 
         Returns (results, verdict). On parse failure returns ([], Verdict.CLEAN).
@@ -179,15 +190,17 @@ class ClaudeReviewer:
             confidence = float(cat_entry.get("confidence", 0.5))
             reasoning = cat_entry.get("reasoning", "")
 
-            results.append(DetectorResult(
-                category=category,
-                tier=tier,
-                confidence=confidence,
-                matched=True,
-                matched_patterns=[f"llm:{cat_name.lower()}"],
-                detector_name="ClaudeReviewer",
-                detail=reasoning,
-            ))
+            results.append(
+                DetectorResult(
+                    category=category,
+                    tier=tier,
+                    confidence=confidence,
+                    matched=True,
+                    matched_patterns=[f"llm:{cat_name.lower()}"],
+                    detector_name="ClaudeReviewer",
+                    detail=reasoning,
+                )
+            )
 
         overall = data.get("overall_assessment", "CLEAN").upper()
         verdict = _VERDICT_MAP.get(overall, Verdict.CLEAN)

@@ -11,7 +11,9 @@ from bakbak_mod.models import ModerationResult
 logger = logging.getLogger("bakbak_mod.audit")
 
 
-def build_audit_entry(result: ModerationResult, duration_ms: float, text_length: int = 0) -> dict:
+def build_audit_entry(
+    result: ModerationResult, duration_ms: float, text_length: int = 0
+) -> dict:
     return {
         "timestamp": time.time(),
         "verdict": result.verdict.value,
@@ -33,15 +35,25 @@ def build_audit_entry(result: ModerationResult, duration_ms: float, text_length:
         "text_length": text_length,
         "llm_reviewed": result.llm_reviewed,
         "llm_pending": result.llm_pending,
-        **({"llm_token_usage": result.llm_token_usage} if result.llm_token_usage else {}),
-        **({"llm_detectors": [
+        **(
+            {"llm_token_usage": result.llm_token_usage}
+            if result.llm_token_usage
+            else {}
+        ),
+        **(
             {
-                "category": d.category.value,
-                "confidence": round(d.confidence, 4),
-                "detail": d.detail,
+                "llm_detectors": [
+                    {
+                        "category": d.category.value,
+                        "confidence": round(d.confidence, 4),
+                        "detail": d.detail,
+                    }
+                    for d in result.llm_details
+                ]
             }
-            for d in result.llm_details
-        ]} if result.llm_details else {}),
+            if result.llm_details
+            else {}
+        ),
     }
 
 

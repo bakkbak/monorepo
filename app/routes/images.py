@@ -37,7 +37,11 @@ def upload_image(body: ImageUpload, db: Session = Depends(get_db)):
             VALUES (:post_id, :data, :content_type)
             ON CONFLICT (post_id) DO UPDATE SET data = :data, content_type = :content_type
         """),
-        {"post_id": body.post_id, "data": image_bytes, "content_type": body.content_type},
+        {
+            "post_id": body.post_id,
+            "data": image_bytes,
+            "content_type": body.content_type,
+        },
     )
     db.execute(
         text("UPDATE posts SET image_url = :url WHERE id = :id"),

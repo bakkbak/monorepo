@@ -12,7 +12,7 @@ import uuid
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-UNIVERSITY_HERD_IDS = ['rvu', 'opj']
+UNIVERSITY_HERD_IDS = ["rvu", "opj"]
 
 
 class CreatePostBody(BaseModel):
@@ -25,7 +25,9 @@ class CreatePostBody(BaseModel):
     image_base64: Optional[str] = None
     image_content_type: str = "image/jpeg"
 
+
 router = APIRouter()
+
 
 def auto_hide_if_needed(post_id: str, db: Session):
     db.execute(
@@ -35,7 +37,7 @@ def auto_hide_if_needed(post_id: str, db: Session):
             WHERE id = :id
               AND (reports >= 2 OR downvotes >= 5)
         """),
-        {"id": post_id}
+        {"id": post_id},
     )
 
 
@@ -43,11 +45,10 @@ def auto_hide_if_needed(post_id: str, db: Session):
 def create_post(
     body: CreatePostBody,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     banned = db.execute(
-        text("SELECT is_banned FROM devices WHERE id = :id"),
-        {"id": body.device_id}
+        text("SELECT is_banned FROM devices WHERE id = :id"), {"id": body.device_id}
     ).scalar()
 
     if banned:
@@ -61,10 +62,12 @@ def create_post(
         if body.herd_id in UNIVERSITY_HERD_IDS:
             record = db.execute(
                 text("SELECT verified_university FROM devices WHERE id = :id"),
-                {"id": body.device_id}
+                {"id": body.device_id},
             ).fetchone()
             if not record or not record.verified_university:
-                raise HTTPException(status_code=403, detail="University verification required")
+                raise HTTPException(
+                    status_code=403, detail="University verification required"
+                )
     elif herd_type == "university":
         record = db.execute(
             text("""
@@ -72,13 +75,12 @@ def create_post(
                 FROM devices
                 WHERE id = :id
             """),
-            {"id": body.device_id}
+            {"id": body.device_id},
         ).fetchone()
 
         if not record or not record.verified_university:
             raise HTTPException(
-                status_code=403,
-                detail="University verification required"
+                status_code=403, detail="University verification required"
             )
 
         university_domain = record.university_domain
@@ -93,7 +95,7 @@ def create_post(
               AND created_at > NOW() - INTERVAL '30 seconds'
             LIMIT 1
         """),
-        {"device_id": body.device_id, "content": body.content}
+        {"device_id": body.device_id, "content": body.content},
     ).fetchone()
 
     if recent_dup:
@@ -107,7 +109,12 @@ def create_post(
             raise HTTPException(status_code=400, detail="Invalid base64 image data")
         if len(image_bytes) > MAX_IMAGE_SIZE:
             raise HTTPException(status_code=400, detail="Image too large (max 5 MB)")
-        if body.image_content_type not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
+        if body.image_content_type not in (
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+        ):
             raise HTTPException(status_code=400, detail="Unsupported image type")
 
     mod_result = run_first_pass(body.content)
@@ -130,7 +137,7 @@ def create_post(
             "herd_id": body.herd_id,
             "university_domain": university_domain,
             "image_url": image_url,
-        }
+        },
     )
 
     if image_bytes:
@@ -139,11 +146,17 @@ def create_post(
                 INSERT INTO post_images (post_id, data, content_type)
                 VALUES (:post_id, :data, :content_type)
             """),
-            {"post_id": post_id, "data": image_bytes, "content_type": body.image_content_type},
+            {
+                "post_id": post_id,
+                "data": image_bytes,
+                "content_type": body.image_content_type,
+            },
         )
 
     if mod_result.verdict != "PASS":
-        hide_and_notify(post_id, body.device_id, mod_result.verdict, mod_result.reason, db)
+        hide_and_notify(
+            post_id, body.device_id, mod_result.verdict, mod_result.reason, db
+        )
         log_moderation(
             post_id=post_id,
             pass_type="first_pass",
@@ -159,8 +172,11 @@ def create_post(
 
     db.commit()
     if background_tasks is not None:
-        background_tasks.add_task(trigger_second_pass, post_id, body.content, body.device_id)
+        background_tasks.add_task(
+            trigger_second_pass, post_id, body.content, body.device_id
+        )
     return {"status": "posted", "post_id": post_id}
+
 
 @router.get("/feed")
 def get_feed(
@@ -169,7 +185,7 @@ def get_feed(
     lng: float,
     herd_type: str = "local",
     herd_id: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
 
     # GLOBAL HERD FEED
@@ -195,7 +211,7 @@ def get_feed(
                 ORDER BY score DESC
                 LIMIT 50
             """),
-            {"herd_id": herd_id}
+            {"herd_id": herd_id},
         ).fetchall()
 
         return [dict(p._mapping) for p in posts]
@@ -203,7 +219,7 @@ def get_feed(
     if herd_type == "local":
         # "For you" feed — posts from herds the user has joined
         posts = db.execute(
-        text("""
+            text("""
             SELECT
                 p.id,
                 p.content,
@@ -225,13 +241,13 @@ def get_feed(
             ORDER BY score DESC
             LIMIT 50
         """),
-        {"device_id": device_id}
+            {"device_id": device_id},
         ).fetchall()
 
     elif herd_type == "university":
         record = db.execute(
             text("SELECT university_domain FROM devices WHERE id = :id"),
-            {"id": device_id}
+            {"id": device_id},
         ).fetchone()
 
         posts = db.execute(
@@ -259,7 +275,11 @@ def get_feed(
                 ORDER BY score DESC
                 LIMIT 50
                 """),
-            {"domain": None if (record and record.university_domain == "teevo.in") else (record.university_domain if record else None)}
+            {
+                "domain": None
+                if (record and record.university_domain == "teevo.in")
+                else (record.university_domain if record else None)
+            },
         ).fetchall()
 
     else:
@@ -267,11 +287,9 @@ def get_feed(
 
     return [dict(p._mapping) for p in posts]
 
+
 @router.get("/trending")
-def get_trending(
-    device_id: str,
-    db: Session = Depends(get_db)
-):
+def get_trending(device_id: str, db: Session = Depends(get_db)):
     posts = db.execute(
         text("""
             SELECT
@@ -297,24 +315,19 @@ def get_trending(
             ORDER BY score DESC
             LIMIT 50
         """),
-        {"herd_ids": UNIVERSITY_HERD_IDS}
+        {"herd_ids": UNIVERSITY_HERD_IDS},
     ).fetchall()
 
     return [dict(p._mapping) for p in posts]
 
+
 @router.post("/vote")
-def vote_post(
-    post_id: str,
-    device_id: str,
-    vote: int,
-    db: Session = Depends(get_db)
-):
+def vote_post(post_id: str, device_id: str, vote: int, db: Session = Depends(get_db)):
     if vote not in (-1, 1):
         raise HTTPException(status_code=400, detail="Invalid vote")
 
     banned = db.execute(
-        text("SELECT is_banned FROM devices WHERE id = :id"),
-        {"id": device_id}
+        text("SELECT is_banned FROM devices WHERE id = :id"), {"id": device_id}
     ).scalar()
 
     if banned:
@@ -325,7 +338,7 @@ def vote_post(
             SELECT vote FROM votes
             WHERE post_id = :post_id AND device_id = :device_id
         """),
-        {"post_id": post_id, "device_id": device_id}
+        {"post_id": post_id, "device_id": device_id},
     ).fetchone()
 
     if existing:
@@ -335,12 +348,12 @@ def vote_post(
         if existing.vote == 1:
             db.execute(
                 text("UPDATE posts SET upvotes = upvotes - 1 WHERE id = :id"),
-                {"id": post_id}
+                {"id": post_id},
             )
         else:
             db.execute(
                 text("UPDATE posts SET downvotes = downvotes - 1 WHERE id = :id"),
-                {"id": post_id}
+                {"id": post_id},
             )
 
         db.execute(
@@ -349,7 +362,7 @@ def vote_post(
                 SET vote = :vote
                 WHERE post_id = :post_id AND device_id = :device_id
             """),
-            {"vote": vote, "post_id": post_id, "device_id": device_id}
+            {"vote": vote, "post_id": post_id, "device_id": device_id},
         )
 
     else:
@@ -358,18 +371,18 @@ def vote_post(
                 INSERT INTO votes (post_id, device_id, vote)
                 VALUES (:post_id, :device_id, :vote)
             """),
-            {"post_id": post_id, "device_id": device_id, "vote": vote}
+            {"post_id": post_id, "device_id": device_id, "vote": vote},
         )
 
     if vote == 1:
         db.execute(
             text("UPDATE posts SET upvotes = upvotes + 1 WHERE id = :id"),
-            {"id": post_id}
+            {"id": post_id},
         )
     else:
         db.execute(
             text("UPDATE posts SET downvotes = downvotes + 1 WHERE id = :id"),
-            {"id": post_id}
+            {"id": post_id},
         )
 
     auto_hide_if_needed(post_id, db)
@@ -377,11 +390,9 @@ def vote_post(
     db.commit()
     return {"status": "voted"}
 
+
 @router.get("/my-posts")
-def get_my_posts(
-    device_id: str,
-    db: Session = Depends(get_db)
-):
+def get_my_posts(device_id: str, db: Session = Depends(get_db)):
     posts = db.execute(
         text("""
             SELECT
@@ -400,7 +411,7 @@ def get_my_posts(
               AND p.is_hidden = FALSE
             ORDER BY p.created_at DESC
         """),
-        {"device_id": device_id}
+        {"device_id": device_id},
     ).fetchall()
 
     return [dict(p._mapping) for p in posts]
@@ -482,14 +493,10 @@ def get_my_reposts(
 
 @router.post("/report")
 def report_post(
-    post_id: str,
-    device_id: str,
-    reason: str,
-    db: Session = Depends(get_db)
+    post_id: str, device_id: str, reason: str, db: Session = Depends(get_db)
 ):
     banned = db.execute(
-        text("SELECT is_banned FROM devices WHERE id = :id"),
-        {"id": device_id}
+        text("SELECT is_banned FROM devices WHERE id = :id"), {"id": device_id}
     ).scalar()
 
     if banned:
@@ -500,7 +507,7 @@ def report_post(
             SELECT 1 FROM reports
             WHERE post_id = :post_id AND device_id = :device_id
         """),
-        {"post_id": post_id, "device_id": device_id}
+        {"post_id": post_id, "device_id": device_id},
     ).fetchone()
 
     if existing:
@@ -511,7 +518,7 @@ def report_post(
             INSERT INTO reports (post_id, device_id, reason)
             VALUES (:post_id, :device_id, :reason)
         """),
-        {"post_id": post_id, "device_id": device_id, "reason": reason}
+        {"post_id": post_id, "device_id": device_id, "reason": reason},
     )
 
     db.execute(
@@ -520,7 +527,7 @@ def report_post(
             SET reports = reports + 1
             WHERE id = :id
         """),
-        {"id": post_id}
+        {"id": post_id},
     )
 
     auto_hide_if_needed(post_id, db)

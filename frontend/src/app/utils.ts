@@ -33,7 +33,7 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
   'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university', isUniversityHerd: true },
   'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
   'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isUniversityHerd: true },
-  'opj':             { displayName: 'OPJ',             emoji: '🏫', herdId: 'opj', isUniversityHerd: true },
+  'opj':             { displayName: 'OPJ',             emoji: '🏫', herdId: 'opj', logo: '/herds/opj.svg', isUniversityHerd: true },
 };
 
 // Default herds every user gets

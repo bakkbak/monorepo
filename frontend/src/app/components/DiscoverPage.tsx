@@ -149,10 +149,10 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-white dark:bg-black pb-20">
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
-        <h1 className="text-4xl font-bold text-black mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>Discover</h1>
+        <h1 className="text-4xl font-bold text-black dark:text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>Discover</h1>
         <p className="text-gray-500">find your vibe ✨</p>
       </div>
 
@@ -163,7 +163,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
           <input
             type="text"
             placeholder="search circles..."
-            className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-black bg-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-black dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
       </div>
@@ -173,7 +173,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
         {circles.map((circle) => (
           <div
             key={circle.id}
-            className="relative rounded-2xl border-2 border-black overflow-hidden bg-white"
+            className="relative rounded-2xl border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-black"
           >
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5">
@@ -194,7 +194,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-bold text-black truncate">
+                  <h3 className="text-lg font-bold text-black dark:text-white truncate">
                     {circle.name}
                   </h3>
                   {circle.trending && (

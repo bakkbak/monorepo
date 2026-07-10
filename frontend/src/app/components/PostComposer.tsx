@@ -79,12 +79,12 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl animate-slide-up flex flex-col" style={{ maxHeight: '85vh' }}>
+      <div className="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-3xl animate-slide-up flex flex-col" style={{ maxHeight: '85vh' }}>
         <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mt-3 flex-shrink-0" />
 
         <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
           <h2
-            className="text-xl font-bold text-black"
+            className="text-xl font-bold text-black dark:text-white"
             style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}
           >
             New Post
@@ -126,7 +126,7 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
               if (e.target.value.length <= maxChars) setText(e.target.value);
             }}
             placeholder="What's happening on campus?"
-            className="w-full h-32 bg-gray-50 border-2 border-gray-200 rounded-xl p-4 text-black resize-none focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-colors"
+            className="w-full h-32 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 text-black dark:text-white resize-none focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-colors"
             autoFocus
           />
 

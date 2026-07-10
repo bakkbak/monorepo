@@ -3,6 +3,8 @@
 @import 'tw-animate-css';
 @import './globals.css';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: #ffffff;
   --color-foreground: #111111;
@@ -19,6 +21,12 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body,
+body:where(.dark *) {
+  background: #000000;
+  color: #ffffff;
 }
 
 .font-display {

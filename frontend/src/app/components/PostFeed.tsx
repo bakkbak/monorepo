@@ -79,7 +79,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      <div className="bg-white rounded-lg shadow-sm border-2 border-black mx-3">
+      <div className="bg-white dark:bg-black rounded-lg shadow-sm border-2 border-black dark:border-white mx-3">
         <div className="cursor-pointer" onClick={onClick}>
           <div className="flex items-center gap-3 px-4 pt-4 pb-3">
             <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
@@ -90,8 +90,8 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
               )}
             </div>
             <div className="flex-1">
-              <div className="font-bold text-gray-900">{post.community}</div>
-              <div className="text-sm text-gray-600">{post.timestamp}</div>
+              <div className="font-bold text-gray-900 dark:text-white">{post.community}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{post.timestamp}</div>
             </div>
             <div className="relative">
               <button
@@ -99,14 +99,14 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
                   e.stopPropagation();
                   setShowReport(!showReport);
                 }}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <MoreHorizontal className="w-5 h-5 text-gray-500" />
+                <MoreHorizontal className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
               {showReport && (
-                <div className="absolute right-0 top-10 bg-white border-2 border-black rounded-xl shadow-lg z-20 w-56 overflow-hidden">
-                  <div className="px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-                    <span className="font-medium text-sm text-gray-700">Report post</span>
+                <div className="absolute right-0 top-10 bg-white dark:bg-gray-900 border-2 border-black dark:border-white rounded-xl shadow-lg z-20 w-56 overflow-hidden">
+                  <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Report post</span>
                     <button onClick={(e) => { e.stopPropagation(); setShowReport(false); }} className="p-1 rounded-full hover:bg-gray-100">
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
@@ -115,7 +115,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
                     <button
                       key={reason}
                       onClick={(e) => { e.stopPropagation(); handleReport(reason); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 flex items-center gap-2 transition-colors"
                     >
                       <Flag className="w-3.5 h-3.5" />
                       {reason}
@@ -131,7 +131,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
             </div>
           )}
           <div className="px-4 pb-3">
-            <p className="text-gray-800 leading-relaxed">{post.content}</p>
+            <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{post.content}</p>
             {post.image_url && (
               <img
                 src={post.image_url}
@@ -143,12 +143,12 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
           </div>
         </div>
 
-        <div className="flex items-center gap-4 px-4 py-3 border-t-2 border-gray-200">
+        <div className="flex items-center gap-4 px-4 py-3 border-t-2 border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-1">
             <button
               onClick={() => handleVote('up')}
               className={`p-1.5 rounded transition-colors ${
-                vote === 'up' ? 'bg-yellow-400 text-black' : 'text-gray-600 hover:bg-yellow-100'
+                vote === 'up' ? 'bg-yellow-400 text-black' : 'text-gray-600 dark:text-gray-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'
               } ${bouncing === 'up' ? 'animate-snap-bounce' : ''}`}
             >
               <ArrowUp className="w-5 h-5" />
@@ -157,7 +157,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
             <button
               onClick={() => handleVote('down')}
               className={`p-1.5 rounded transition-colors ${
-                vote === 'down' ? 'bg-black text-yellow-400' : 'text-gray-600 hover:bg-gray-100'
+                vote === 'down' ? 'bg-black text-yellow-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
               } ${bouncing === 'down' ? 'animate-snap-bounce' : ''}`}
             >
               <ArrowDown className="w-5 h-5" />
@@ -166,7 +166,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
 
           <button
             onClick={onClick}
-            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
           >
             <MessageCircle className="w-5 h-5" />
             <span className="text-sm font-medium">{post.comments}</span>
@@ -185,7 +185,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
             <span className="text-sm font-medium">{post.reposts + (reposted ? 1 : 0)}</span>
           </button>
 
-          <button className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors ml-auto mr-2">
+          <button className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors ml-auto mr-2">
             <Share2 className="w-5 h-5" />
           </button>
         </div>
@@ -217,7 +217,7 @@ export function PostFeed({ posts, loading, error, deviceId, onPostClick, onRetry
   if (error && posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <p className="text-gray-600 mb-4">{error}</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
         {onRetry && (
           <button
             onClick={onRetry}

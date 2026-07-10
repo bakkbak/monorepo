@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, GraduationCap, CheckCircle, Loader2 } from 'lucide-react';
+import { X, GraduationCap, CheckCircle, Loader2, Moon, Sun } from 'lucide-react';
 import { getDeviceStatus, requestVerification, confirmVerification } from '../api';
 
 type VerifyStep = 'idle' | 'email' | 'otp' | 'verified';
@@ -7,9 +7,11 @@ type VerifyStep = 'idle' | 'email' | 'otp' | 'verified';
 interface SettingsSheetProps {
   deviceId: string | null;
   onClose: () => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
-export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
+export function SettingsSheet({ deviceId, onClose, theme, onToggleTheme }: SettingsSheetProps) {
   const [step, setStep] = useState<VerifyStep>('idle');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -69,7 +71,7 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl border-t-2 border-x-2 border-black z-50 pb-24">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-3xl border-t-2 border-x-2 border-black dark:border-white z-50 pb-24">
         {/* Handle */}
         <div className="flex justify-center pt-4 pb-2">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
@@ -77,21 +79,48 @@ export function SettingsSheet({ deviceId, onClose }: SettingsSheetProps) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-2 pb-5">
-          <h2 className="text-xl font-bold text-black">Settings</h2>
+          <h2 className="text-xl font-bold text-black dark:text-white">Settings</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
 
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 space-y-4">
+          {/* Appearance */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                {theme === 'dark' ? (
+                  <Moon className="w-5 h-5 text-black dark:text-white" />
+                ) : (
+                  <Sun className="w-5 h-5 text-black dark:text-white" />
+                )}
+                <h3 className="font-bold text-black dark:text-white text-[15px]">Appearance</h3>
+              </div>
+              <button
+                onClick={onToggleTheme}
+                className={`relative w-12 h-7 rounded-full transition-colors ${
+                  theme === 'dark' ? 'bg-yellow-400' : 'bg-gray-300'
+                }`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${
+                  theme === 'dark' ? 'translate-x-5.5' : 'translate-x-0.5'
+                }`} />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+            </p>
+          </div>
+
           {/* University Verification */}
-          <div className="bg-gray-50 rounded-2xl p-5">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5">
             <div className="flex items-center gap-2.5 mb-5">
-              <GraduationCap className="w-5 h-5 text-black" />
-              <h3 className="font-bold text-black text-[15px]">University Verification</h3>
+              <GraduationCap className="w-5 h-5 text-black dark:text-white" />
+              <h3 className="font-bold text-black dark:text-white text-[15px]">University Verification</h3>
               {step === 'verified' && (
                 <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
               )}

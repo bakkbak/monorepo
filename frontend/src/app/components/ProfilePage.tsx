@@ -16,9 +16,11 @@ interface ProfilePageProps {
   isReposted?: (postId: string) => boolean;
   unreadCount?: number;
   onNotificationsRead?: () => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
-export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepost, isReposted, unreadCount = 0, onNotificationsRead }: ProfilePageProps) {
+export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepost, isReposted, unreadCount = 0, onNotificationsRead, theme, onToggleTheme }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [myComments, setMyComments] = useState<MyComment[]>([]);
@@ -197,7 +199,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     }
 
     return allPosts.map((post) => (
-      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white rounded-xl border-2 border-black">
+      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white">
         {post._isRepost && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
             <Repeat2 className="w-3.5 h-3.5 text-yellow-600" />
@@ -213,16 +215,16 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
             )}
           </div>
           <div className="flex-1">
-            <div className="font-bold text-black">{post.community}</div>
+            <div className="font-bold text-black dark:text-white">{post.community}</div>
             <div className="text-sm text-gray-400">{post.timestamp}</div>
           </div>
         </div>
 
         <div className="px-4 pb-3 cursor-pointer" onClick={() => onPostClick?.(post)}>
-          <p className="text-black leading-relaxed">{post.content}</p>
+          <p className="text-black dark:text-gray-200 leading-relaxed">{post.content}</p>
         </div>
 
-        <div className="border-t border-gray-200 px-4 py-3">
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <button
@@ -317,11 +319,11 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
 
   return (
     <>
-    <div className="min-h-screen bg-white pb-4">
+    <div className="min-h-screen bg-white dark:bg-black pb-4">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-start justify-between">
-          <h1 className="text-3xl font-bold text-black leading-tight" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>
+          <h1 className="text-3xl font-bold text-black dark:text-white leading-tight" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>
             Hey there<br />stranger!
           </h1>
           <div className="flex items-center gap-2">
@@ -330,10 +332,10 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               className={`p-3 rounded-full border-2 transition-colors relative ${
                 showNotifications
                   ? 'border-yellow-400 bg-yellow-400 hover:bg-yellow-300'
-                  : 'border-black bg-white hover:bg-gray-50'
+                  : 'border-black dark:border-white bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-900'
               }`}
             >
-              <Bell className="w-6 h-6 text-black" />
+              <Bell className="w-6 h-6 text-black dark:text-white" />
               {!showNotifications && unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
@@ -342,9 +344,9 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
             </button>
             <button
               onClick={() => setShowSettings(true)}
-              className="p-3 rounded-full border-2 border-black bg-white hover:bg-gray-50 transition-colors"
+              className="p-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
             >
-              <Settings className="w-6 h-6 text-black" />
+              <Settings className="w-6 h-6 text-black dark:text-white" />
             </button>
           </div>
         </div>
@@ -353,7 +355,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
       {showNotifications ? (
         <>
           <div className="px-6 mb-4">
-            <h2 className="text-lg font-bold text-black">Notifications</h2>
+            <h2 className="text-lg font-bold text-black dark:text-white">Notifications</h2>
           </div>
           <div className="space-y-4 px-3">
             {renderNotifications()}
@@ -363,9 +365,9 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
         <>
           {/* Tabs */}
           <div className="px-6 mb-6">
-            <div className="flex gap-6 border-b-2 border-gray-200">
+            <div className="flex gap-6 border-b-2 border-gray-200 dark:border-gray-700">
               <button onClick={() => setActiveTab('posts')} className="pb-3 relative">
-                <span className={`font-medium ${activeTab === 'posts' ? 'text-black' : 'text-gray-500'}`}>
+                <span className={`font-medium ${activeTab === 'posts' ? 'text-black dark:text-white' : 'text-gray-500'}`}>
                   My Posts
                 </span>
                 {activeTab === 'posts' && (
@@ -374,7 +376,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               </button>
 
               <button onClick={() => setActiveTab('comments')} className="pb-3 relative">
-                <span className={`font-medium ${activeTab === 'comments' ? 'text-black' : 'text-gray-500'}`}>
+                <span className={`font-medium ${activeTab === 'comments' ? 'text-black dark:text-white' : 'text-gray-500'}`}>
                   My Comments
                 </span>
                 {activeTab === 'comments' && (
@@ -383,7 +385,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               </button>
 
               <button onClick={() => setActiveTab('saved')} className="pb-3 relative">
-                <span className={`font-medium ${activeTab === 'saved' ? 'text-black' : 'text-gray-500'}`}>
+                <span className={`font-medium ${activeTab === 'saved' ? 'text-black dark:text-white' : 'text-gray-500'}`}>
                   Saved Posts
                 </span>
                 {activeTab === 'saved' && (
@@ -409,7 +411,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     </div>
 
     {showSettings && (
-      <SettingsSheet deviceId={deviceId} onClose={() => setShowSettings(false)} />
+      <SettingsSheet deviceId={deviceId} onClose={() => setShowSettings(false)} theme={theme} onToggleTheme={onToggleTheme} />
     )}
     </>
   );

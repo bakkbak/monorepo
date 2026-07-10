@@ -9,12 +9,14 @@ import { TrendingPage } from './components/TrendingPage';
 import { SplashScreen } from './components/SplashScreen';
 import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
 import { getOrCreateDeviceId } from './device';
+import { useTheme } from './theme';
 import { getLocation, type Location } from './location';
 import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus } from './api';
 import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, isUniversityFeed, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('home');
   const [selectedFeed, setSelectedFeed] = useState('For you');
   const [showHeader, setShowHeader] = useState(true);
@@ -256,7 +258,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20 max-w-md mx-auto relative">
+    <div className="min-h-screen bg-white dark:bg-black pb-20 max-w-md mx-auto relative">
       {/* Header */}
       {activeTab === 'home' && (
         <div
@@ -273,7 +275,7 @@ export default function App() {
                   className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap active:scale-95 ${
                     selectedFeed === option
                       ? 'bg-black text-yellow-400 border-2 border-black'
-                      : 'bg-white text-black border-2 border-black hover:bg-gray-100'
+                      : 'bg-white dark:bg-gray-900 text-black dark:text-white border-2 border-black dark:border-white hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   {option}
@@ -307,7 +309,7 @@ export default function App() {
         )}
         {activeTab === 'trending' && <TrendingPage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} onRepost={handleRepost} isReposted={isReposted} />}
         {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
-        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} />}
+        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} theme={theme} onToggleTheme={toggleTheme} />}
       </div>
 
       {/* FAB */}
@@ -329,7 +331,7 @@ export default function App() {
       )}
 
       {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 border-t-2 border-black max-w-md mx-auto z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 dark:bg-gray-900 border-t-2 border-black dark:border-white max-w-md mx-auto z-50">
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => setActiveTab('home')}

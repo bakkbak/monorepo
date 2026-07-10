@@ -65,7 +65,7 @@ function CommentItem({
           <span className="text-sm font-medium text-gray-700">Anon</span>
           <span className="text-xs text-gray-400">{getTimeAgo(comment.created_at)}</span>
         </div>
-        <p className="text-gray-800 text-sm leading-relaxed mb-2">{comment.content}</p>
+        <p className="text-gray-800 dark:text-gray-200 text-sm leading-relaxed mb-2">{comment.content}</p>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <button
@@ -170,20 +170,20 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-white dark:bg-black pb-20">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b-2 border-gray-200 z-10 px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 bg-white dark:bg-black border-b-2 border-gray-200 dark:border-gray-700 z-10 px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="p-1.5 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
+          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-6 h-6 dark:text-white" />
         </button>
-        <span className="font-bold text-lg">Thread</span>
+        <span className="font-bold text-lg dark:text-white">Thread</span>
       </div>
 
       {/* Original post */}
-      <div className="px-4 pt-4 pb-3 border-b-2 border-gray-100">
+      <div className="px-4 pt-4 pb-3 border-b-2 border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl overflow-hidden">
             {getCommunityLogo(post.community) ? (
@@ -193,8 +193,8 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
             )}
           </div>
           <div className="flex-1">
-            <div className="font-bold text-gray-900">{post.community}</div>
-            <div className="text-sm text-gray-500">{post.timestamp}</div>
+            <div className="font-bold text-gray-900 dark:text-white">{post.community}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">{post.timestamp}</div>
           </div>
           <div className="relative">
             <button
@@ -232,7 +232,7 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
           </div>
         )}
 
-        <p className="text-gray-900 text-lg leading-relaxed mb-4">{post.content}</p>
+        <p className="text-gray-900 dark:text-gray-200 text-lg leading-relaxed mb-4">{post.content}</p>
 
         {post.image_url && (
           <img
@@ -243,7 +243,7 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
           />
         )}
 
-        <div className="flex items-center gap-4 py-3 border-t border-gray-200">
+        <div className="flex items-center gap-4 py-3 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-1">
             <button
               onClick={async () => {
@@ -322,7 +322,7 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
       </div>
 
       {/* Reply input */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t-2 border-gray-200 px-4 py-3 z-50">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-black border-t-2 border-gray-200 dark:border-gray-700 px-4 py-3 z-50">
         {replyingTo && (
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-xs text-gray-500">Replying to a comment</span>
@@ -338,7 +338,7 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
             onChange={(e) => setReplyText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !submitting && handleReply()}
             placeholder={replyingTo ? 'Reply to comment...' : 'Reply anonymously...'}
-            className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 border-2 border-transparent focus:border-yellow-400"
+            className="flex-1 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 border-2 border-transparent focus:border-yellow-400"
           />
           <button
             onClick={handleReply}

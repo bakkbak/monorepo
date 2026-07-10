@@ -20,7 +20,12 @@ ACTIONABLE_VERDICTS = {"STRESS", "TAKEDOWN"}
 
 
 def parse_moderation_response(raw: str) -> dict:
-    result = {"verdict": "PASS", "category": "NONE", "reason": "No harm detected.", "confidence": "LOW"}
+    result = {
+        "verdict": "PASS",
+        "category": "NONE",
+        "reason": "No harm detected.",
+        "confidence": "LOW",
+    }
 
     for line in raw.strip().splitlines():
         line = line.strip()

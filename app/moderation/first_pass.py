@@ -49,12 +49,15 @@ def _confidence_to_label(score: float) -> str:
 def run_first_pass(content: str) -> FirstPassResult:
     try:
         import bakbak_mod
-        from bakbak_mod.models import Verdict
     except ImportError:
         logger.warning("bakbak-mod not installed, skipping first-pass")
         return FirstPassResult(
-            verdict="PASS", category="NONE", reason="No harm detected.",
-            confidence="LOW", model="none", tier=0,
+            verdict="PASS",
+            category="NONE",
+            reason="No harm detected.",
+            confidence="LOW",
+            model="none",
+            tier=0,
         )
 
     if ANTHROPIC_API_KEY and not bakbak_mod.config.LLM_ENABLED:
@@ -66,12 +69,18 @@ def run_first_pass(content: str) -> FirstPassResult:
 
     if verdict == "PASS":
         return FirstPassResult(
-            verdict="PASS", category="NONE", reason="No harm detected.",
-            confidence="LOW", model="bakbak-mod", tier=0,
+            verdict="PASS",
+            category="NONE",
+            reason="No harm detected.",
+            confidence="LOW",
+            model="bakbak-mod",
+            tier=0,
         )
 
     categories = [c.value for c in result.categories]
-    mapped_category = CATEGORY_MAP.get(categories[0], "SAFETY") if categories else "SAFETY"
+    mapped_category = (
+        CATEGORY_MAP.get(categories[0], "SAFETY") if categories else "SAFETY"
+    )
 
     reason = ""
     if result.details:

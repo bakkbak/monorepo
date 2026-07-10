@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -37,7 +37,9 @@ def get_unread_count(device_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/read")
-def mark_read(device_id: str, notification_ids: List[str], db: Session = Depends(get_db)):
+def mark_read(
+    device_id: str, notification_ids: List[str], db: Session = Depends(get_db)
+):
     if not notification_ids:
         return {"status": "ok"}
 

@@ -9,10 +9,7 @@ router = APIRouter()
 
 
 @router.get("/")
-def get_comments(
-    post_id: str,
-    db: Session = Depends(get_db)
-):
+def get_comments(post_id: str, db: Session = Depends(get_db)):
     rows = db.execute(
         text("""
             SELECT id, post_id, device_id, parent_comment_id,
@@ -21,17 +18,14 @@ def get_comments(
             WHERE post_id = :post_id
             ORDER BY created_at ASC
         """),
-        {"post_id": post_id}
+        {"post_id": post_id},
     ).fetchall()
 
     return [dict(r._mapping) for r in rows]
 
 
 @router.get("/my-comments")
-def get_my_comments(
-    device_id: str,
-    db: Session = Depends(get_db)
-):
+def get_my_comments(device_id: str, db: Session = Depends(get_db)):
     rows = db.execute(
         text("""
             SELECT
@@ -55,7 +49,7 @@ def get_my_comments(
             WHERE c.device_id = :device_id
             ORDER BY c.created_at DESC
         """),
-        {"device_id": device_id}
+        {"device_id": device_id},
     ).fetchall()
 
     return [dict(r._mapping) for r in rows]
@@ -67,19 +61,17 @@ def create_comment(
     device_id: str,
     content: str,
     parent_comment_id: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     banned = db.execute(
-        text("SELECT is_banned FROM devices WHERE id = :id"),
-        {"id": device_id}
+        text("SELECT is_banned FROM devices WHERE id = :id"), {"id": device_id}
     ).scalar()
 
     if banned:
         raise HTTPException(status_code=403, detail="Device banned")
 
     post_exists = db.execute(
-        text("SELECT 1 FROM posts WHERE id = :id"),
-        {"id": post_id}
+        text("SELECT 1 FROM posts WHERE id = :id"), {"id": post_id}
     ).fetchone()
 
     if not post_exists:
@@ -88,7 +80,7 @@ def create_comment(
     if parent_comment_id:
         parent = db.execute(
             text("SELECT 1 FROM comments WHERE id = :id AND post_id = :post_id"),
-            {"id": parent_comment_id, "post_id": post_id}
+            {"id": parent_comment_id, "post_id": post_id},
         ).fetchone()
 
         if not parent:
@@ -103,7 +95,7 @@ def create_comment(
               AND created_at > NOW() - INTERVAL '30 seconds'
             LIMIT 1
         """),
-        {"device_id": device_id, "post_id": post_id, "content": content}
+        {"device_id": device_id, "post_id": post_id, "content": content},
     ).fetchone()
 
     if recent_dup:
@@ -122,7 +114,7 @@ def create_comment(
             "device_id": device_id,
             "parent_comment_id": parent_comment_id,
             "content": content,
-        }
+        },
     )
     db.commit()
 
@@ -131,17 +123,13 @@ def create_comment(
 
 @router.post("/vote")
 def vote_comment(
-    comment_id: str,
-    device_id: str,
-    vote: int,
-    db: Session = Depends(get_db)
+    comment_id: str, device_id: str, vote: int, db: Session = Depends(get_db)
 ):
     if vote not in (-1, 1):
         raise HTTPException(status_code=400, detail="Invalid vote")
 
     banned = db.execute(
-        text("SELECT is_banned FROM devices WHERE id = :id"),
-        {"id": device_id}
+        text("SELECT is_banned FROM devices WHERE id = :id"), {"id": device_id}
     ).scalar()
 
     if banned:
@@ -152,30 +140,46 @@ def vote_comment(
             SELECT vote FROM comment_votes
             WHERE comment_id = :comment_id AND device_id = :device_id
         """),
-        {"comment_id": comment_id, "device_id": device_id}
+        {"comment_id": comment_id, "device_id": device_id},
     ).fetchone()
 
     if existing:
         if existing.vote == vote:
             return {"status": "unchanged"}
         if existing.vote == 1:
-            db.execute(text("UPDATE comments SET upvotes = upvotes - 1 WHERE id = :id"), {"id": comment_id})
+            db.execute(
+                text("UPDATE comments SET upvotes = upvotes - 1 WHERE id = :id"),
+                {"id": comment_id},
+            )
         else:
-            db.execute(text("UPDATE comments SET downvotes = downvotes - 1 WHERE id = :id"), {"id": comment_id})
+            db.execute(
+                text("UPDATE comments SET downvotes = downvotes - 1 WHERE id = :id"),
+                {"id": comment_id},
+            )
         db.execute(
-            text("UPDATE comment_votes SET vote = :vote WHERE comment_id = :cid AND device_id = :did"),
-            {"vote": vote, "cid": comment_id, "did": device_id}
+            text(
+                "UPDATE comment_votes SET vote = :vote WHERE comment_id = :cid AND device_id = :did"
+            ),
+            {"vote": vote, "cid": comment_id, "did": device_id},
         )
     else:
         db.execute(
-            text("INSERT INTO comment_votes (comment_id, device_id, vote) VALUES (:cid, :did, :vote)"),
-            {"cid": comment_id, "did": device_id, "vote": vote}
+            text(
+                "INSERT INTO comment_votes (comment_id, device_id, vote) VALUES (:cid, :did, :vote)"
+            ),
+            {"cid": comment_id, "did": device_id, "vote": vote},
         )
 
     if vote == 1:
-        db.execute(text("UPDATE comments SET upvotes = upvotes + 1 WHERE id = :id"), {"id": comment_id})
+        db.execute(
+            text("UPDATE comments SET upvotes = upvotes + 1 WHERE id = :id"),
+            {"id": comment_id},
+        )
     else:
-        db.execute(text("UPDATE comments SET downvotes = downvotes + 1 WHERE id = :id"), {"id": comment_id})
+        db.execute(
+            text("UPDATE comments SET downvotes = downvotes + 1 WHERE id = :id"),
+            {"id": comment_id},
+        )
 
     db.commit()
     return {"status": "voted"}

@@ -21,28 +21,28 @@ def _send_otp_email(to_email: str, otp: str):
         return
     resend.api_key = RESEND_API_KEY
     try:
-        resend.Emails.send({
-            "from": RESEND_FROM,
-            "to": to_email,
-            "subject": "Your Teevo verification code",
-            "html": (
-                f"<p>Your Teevo university verification code is:</p>"
-                f"<h2 style='letter-spacing:4px'>{otp}</h2>"
-                f"<p>This code expires in 10 minutes. Do not share it with anyone.</p>"
-            ),
-        })
+        resend.Emails.send(
+            {
+                "from": RESEND_FROM,
+                "to": to_email,
+                "subject": "Your Teevo verification code",
+                "html": (
+                    f"<p>Your Teevo university verification code is:</p>"
+                    f"<h2 style='letter-spacing:4px'>{otp}</h2>"
+                    f"<p>This code expires in 10 minutes. Do not share it with anyone.</p>"
+                ),
+            }
+        )
     except Exception as e:
         print(f"[Resend error] {e}")
         raise HTTPException(status_code=500, detail="Failed to send OTP email")
 
+
 router = APIRouter()
 
+
 @router.post("/request")
-def request_verification(
-    device_id: str,
-    email: str,
-    db: Session = Depends(get_db)
-):
+def request_verification(device_id: str, email: str, db: Session = Depends(get_db)):
     if "@" not in email:
         raise HTTPException(status_code=400, detail="Invalid email")
 
@@ -53,14 +53,11 @@ def request_verification(
             SELECT 1 FROM university_domains
             WHERE domain = :d AND active = TRUE
         """),
-        {"d": domain}
+        {"d": domain},
     ).fetchone()
 
     if not allowed:
-        raise HTTPException(
-            status_code=403,
-            detail="University not supported yet"
-        )
+        raise HTTPException(status_code=403, detail="University not supported yet")
 
     # (OPTIONAL) restrict allowed domains later
     # if domain not in ALLOWED_DOMAINS: ...
@@ -72,8 +69,7 @@ def request_verification(
 
     # delete old attempts
     db.execute(
-        text("DELETE FROM email_verifications WHERE device_id = :d"),
-        {"d": device_id}
+        text("DELETE FROM email_verifications WHERE device_id = :d"), {"d": device_id}
     )
 
     db.execute(
@@ -88,8 +84,8 @@ def request_verification(
             "email": email,
             "domain": domain,
             "otp": otp_hash,
-            "exp": expires_at
-        }
+            "exp": expires_at,
+        },
     )
 
     db.execute(
@@ -98,7 +94,7 @@ def request_verification(
             SET verification_status = 'pending'
             WHERE id = :id
         """),
-        {"id": device_id}
+        {"id": device_id},
     )
 
     db.commit()
@@ -107,12 +103,9 @@ def request_verification(
 
     return {"status": "otp_sent"}
 
+
 @router.post("/confirm")
-def confirm_verification(
-    device_id: str,
-    otp: str,
-    db: Session = Depends(get_db)
-):
+def confirm_verification(device_id: str, otp: str, db: Session = Depends(get_db)):
     otp_hash = hashlib.sha256(otp.encode()).hexdigest()
 
     record = db.execute(
@@ -121,7 +114,7 @@ def confirm_verification(
             FROM email_verifications
             WHERE device_id = :d AND otp = :otp
         """),
-        {"d": device_id, "otp": otp_hash}
+        {"d": device_id, "otp": otp_hash},
     ).fetchone()
 
     if not record:
@@ -139,19 +132,14 @@ def confirm_verification(
                 verification_status = 'verified'
             WHERE id = :id
         """),
-        {"id": device_id, "domain": record.domain}
+        {"id": device_id, "domain": record.domain},
     )
 
     # cleanup sensitive data
     db.execute(
-        text("DELETE FROM email_verifications WHERE device_id = :d"),
-        {"d": device_id}
+        text("DELETE FROM email_verifications WHERE device_id = :d"), {"d": device_id}
     )
 
     db.commit()
 
-    return {
-        "status": "verified",
-        "university_domain": record.domain
-    }
-
+    return {"status": "verified", "university_domain": record.domain}

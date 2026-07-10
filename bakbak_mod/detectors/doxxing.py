@@ -9,7 +9,6 @@ from bakbak_mod.models import Category, DetectorResult
 
 
 class DoxxingDetector(BaseDetector):
-
     def __init__(self):
         data = self._load_json(DATA_DIR / "pii_patterns.json")
         self._pii_regexes = {

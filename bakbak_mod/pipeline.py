@@ -20,7 +20,6 @@ logger = logging.getLogger("bakbak_mod.pipeline")
 
 
 class Pipeline:
-
     def __init__(self):
         self._detectors: List[BaseDetector] = []
         self._claude_reviewer = None  # Optional[ClaudeReviewer]
@@ -82,12 +81,28 @@ class Pipeline:
             llm_confidence = max(r.confidence for r in llm_results)
             merged_confidence = max(confidence, (confidence + llm_confidence) / 2)
             merged_categories = list(rule_categories | llm_categories)
-            return verdict, tier, merged_categories, merged_confidence, True, llm_results, token_usage
+            return (
+                verdict,
+                tier,
+                merged_categories,
+                merged_confidence,
+                True,
+                llm_results,
+                token_usage,
+            )
         else:
             # LLM disagrees — downgrade TAKEDOWN to FLAG
             if verdict == Verdict.TAKEDOWN:
                 logger.info("LLM disagrees with TAKEDOWN, downgrading to FLAG")
-                return Verdict.FLAG, 1, categories, confidence, True, llm_results, token_usage
+                return (
+                    Verdict.FLAG,
+                    1,
+                    categories,
+                    confidence,
+                    True,
+                    llm_results,
+                    token_usage,
+                )
             return verdict, tier, categories, confidence, True, llm_results, token_usage
 
     def moderate(
@@ -161,11 +176,21 @@ class Pipeline:
                 if matched:
                     # Detectors fired (Tier 1 or Tier 2) — sync LLM review
                     (
-                        verdict, tier, categories, confidence,
-                        llm_reviewed, llm_details, llm_token_usage,
+                        verdict,
+                        tier,
+                        categories,
+                        confidence,
+                        llm_reviewed,
+                        llm_details,
+                        llm_token_usage,
                     ) = self._apply_llm_tier2_sync(
-                        preprocessed, matched, all_results,
-                        verdict, tier, categories, confidence,
+                        preprocessed,
+                        matched,
+                        all_results,
+                        verdict,
+                        tier,
+                        categories,
+                        confidence,
                     )
                 else:
                     # Clean but suspicious (long text, possible evasion)
@@ -229,6 +254,7 @@ class Pipeline:
         def _run():
             try:
                 import asyncio
+
                 llm_results, llm_verdict, token_usage = asyncio.run(
                     self._claude_reviewer.review_async(text, all_results)
                 )

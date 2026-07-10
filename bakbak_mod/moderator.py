@@ -42,6 +42,7 @@ def _get_pipeline() -> Pipeline:
 
     if config.LLM_ENABLED and config.CLAUDE_API_KEY:
         from bakbak_mod.llm.claude_reviewer import ClaudeReviewer
+
         p.set_claude_reviewer(
             ClaudeReviewer(
                 api_key=config.CLAUDE_API_KEY,
@@ -62,7 +63,9 @@ def moderate(
     llm_callback: Optional[Callable[[LLMReviewResult], None]] = None,
 ) -> ModerationResult:
     pipeline = _get_pipeline()
-    return pipeline.moderate(text, debug=debug or config.DEBUG, llm_callback=llm_callback)
+    return pipeline.moderate(
+        text, debug=debug or config.DEBUG, llm_callback=llm_callback
+    )
 
 
 def reset():

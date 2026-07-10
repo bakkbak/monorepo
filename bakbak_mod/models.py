@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 
 class Verdict(Enum):
@@ -24,21 +24,25 @@ class Category(Enum):
     POLITICAL = "POLITICAL"
 
 
-TIER_2_CATEGORIES = frozenset({
-    Category.CASTE,
-    Category.RELIGIOUS,
-    Category.THREATS,
-    Category.SEXUAL,
-    Category.DOXXING,
-    Category.SELF_HARM,
-    Category.LEGAL,
-})
+TIER_2_CATEGORIES = frozenset(
+    {
+        Category.CASTE,
+        Category.RELIGIOUS,
+        Category.THREATS,
+        Category.SEXUAL,
+        Category.DOXXING,
+        Category.SELF_HARM,
+        Category.LEGAL,
+    }
+)
 
-TIER_1_CATEGORIES = frozenset({
-    Category.REGIONAL,
-    Category.GENDER,
-    Category.POLITICAL,
-})
+TIER_1_CATEGORIES = frozenset(
+    {
+        Category.REGIONAL,
+        Category.GENDER,
+        Category.POLITICAL,
+    }
+)
 
 
 @dataclass

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from bakbak_mod.extensions.base import BaseExtension
-from bakbak_mod.models import ModerationResult, Verdict
+from bakbak_mod.models import ModerationResult
 
 
 class ImageModerator(BaseExtension):

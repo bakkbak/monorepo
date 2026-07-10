@@ -6,7 +6,6 @@ from bakbak_mod.models import Category, DetectorResult
 
 
 class LegalDetector(BaseDetector):
-
     def __init__(self):
         data = self._load_json(DATA_DIR / "legal_terms.json")
         self._defamation_patterns = data.get("defamation_patterns", [])

@@ -34,15 +34,17 @@ def _load_slang_map() -> dict:
     return _SLANG_MAP
 
 
-_LEET_MAP = str.maketrans({
-    "@": "a",
-    "0": "o",
-    "1": "i",
-    "3": "e",
-    "$": "s",
-    "!": "i",
-    "+": "t",
-})
+_LEET_MAP = str.maketrans(
+    {
+        "@": "a",
+        "0": "o",
+        "1": "i",
+        "3": "e",
+        "$": "s",
+        "!": "i",
+        "+": "t",
+    }
+)
 
 
 def normalize(text: str) -> str:

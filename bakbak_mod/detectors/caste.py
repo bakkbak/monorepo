@@ -6,7 +6,6 @@ from bakbak_mod.models import Category, DetectorResult
 
 
 class CasteDetector(BaseDetector):
-
     def __init__(self):
         data = self._load_json(DATA_DIR / "caste_slurs.json")
         self._patterns = data.pop("patterns", [])

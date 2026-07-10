@@ -149,7 +149,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-20">
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-20">
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
         <h1 className="text-4xl font-bold text-black dark:text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>Discover</h1>
@@ -163,7 +163,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
           <input
             type="text"
             placeholder="search circles..."
-            className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-black dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-[#1a1a1a] dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
       </div>
@@ -173,7 +173,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
         {circles.map((circle) => (
           <div
             key={circle.id}
-            className="relative rounded-2xl border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-black"
+            className="relative rounded-2xl border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-[#1a1a1a]"
           >
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5">

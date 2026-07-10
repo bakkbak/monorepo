@@ -79,7 +79,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      <div className="bg-white dark:bg-black rounded-lg shadow-sm border-2 border-black dark:border-white mx-3">
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-lg shadow-sm border-2 border-black dark:border-white mx-3">
         <div className="cursor-pointer" onClick={onClick}>
           <div className="flex items-center gap-3 px-4 pt-4 pb-3">
             <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">

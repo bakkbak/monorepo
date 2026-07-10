@@ -258,7 +258,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-20 max-w-md mx-auto relative">
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-20 max-w-md mx-auto relative">
       {/* Header */}
       {activeTab === 'home' && (
         <div
@@ -331,7 +331,7 @@ export default function App() {
       )}
 
       {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 dark:bg-gray-900 border-t-2 border-black dark:border-white max-w-md mx-auto z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 dark:bg-yellow-400 border-t-2 border-black dark:border-black max-w-md mx-auto z-50">
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => setActiveTab('home')}

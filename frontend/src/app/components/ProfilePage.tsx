@@ -199,7 +199,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     }
 
     return allPosts.map((post) => (
-      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-black rounded-xl border-2 border-black dark:border-white">
+      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-[#1a1a1a] rounded-xl border-2 border-black dark:border-white">
         {post._isRepost && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
             <Repeat2 className="w-3.5 h-3.5 text-yellow-600" />
@@ -319,7 +319,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
 
   return (
     <>
-    <div className="min-h-screen bg-white dark:bg-black pb-4">
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-4">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-start justify-between">
@@ -332,7 +332,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               className={`p-3 rounded-full border-2 transition-colors relative ${
                 showNotifications
                   ? 'border-yellow-400 bg-yellow-400 hover:bg-yellow-300'
-                  : 'border-black dark:border-white bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-900'
+                  : 'border-black dark:border-white bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-900'
               }`}
             >
               <Bell className="w-6 h-6 text-black dark:text-white" />
@@ -344,7 +344,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
             </button>
             <button
               onClick={() => setShowSettings(true)}
-              className="p-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+              className="p-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
             >
               <Settings className="w-6 h-6 text-black dark:text-white" />
             </button>

@@ -4,33 +4,42 @@ const DEVICE_ID_KEY = 'teevo_device_id';
 const FINGERPRINT_KEY = 'teevo_fingerprint';
 
 function generateFingerprint(): string {
-  const nav = [
+  const parts = [
     navigator.userAgent,
     navigator.language,
     screen.width,
     screen.height,
+    screen.colorDepth,
+    navigator.hardwareConcurrency,
     new Date().getTimezoneOffset(),
   ].join('|');
-  return nav + '|' + crypto.randomUUID();
+  return parts;
 }
 
 export async function getOrCreateDeviceId(): Promise<string> {
+  // Migrate old bakbak keys to teevo keys (one-time)
+  const oldId = localStorage.getItem('bakbak_device_id');
+  const oldFp = localStorage.getItem('bakbak_fingerprint');
+  if (oldId && !localStorage.getItem(DEVICE_ID_KEY)) {
+    localStorage.setItem(DEVICE_ID_KEY, oldId);
+    if (oldFp) localStorage.setItem(FINGERPRINT_KEY, oldFp);
+    localStorage.removeItem('bakbak_device_id');
+    localStorage.removeItem('bakbak_fingerprint');
+  }
+
   const stored = localStorage.getItem(DEVICE_ID_KEY);
   const storedFp = localStorage.getItem(FINGERPRINT_KEY);
 
-  // If we have a stored ID, re-register with the same fingerprint to verify it
-  // still exists on the backend (handles DB resets gracefully)
   if (stored && storedFp) {
     try {
       const { device_id, banned } = await registerDevice(storedFp);
       if (banned) throw new Error('Device is banned');
-      // Update in case backend returned a different ID
       localStorage.setItem(DEVICE_ID_KEY, device_id);
       return device_id;
-    } catch {
-      // Registration failed — clear and re-register with fresh fingerprint
-      localStorage.removeItem(DEVICE_ID_KEY);
-      localStorage.removeItem(FINGERPRINT_KEY);
+    } catch (e: any) {
+      if (e?.message === 'Device is banned') throw e;
+      // Transient error — keep the stored ID rather than wiping it
+      return stored;
     }
   }
 

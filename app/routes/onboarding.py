@@ -15,7 +15,7 @@ class OnboardingPayload(BaseModel):
     university_other: Optional[str] = None
     interests: List[str] = []
     interest_categories: Dict[str, str] = {}
-    age_range: str = "prefer_not_to_say"
+    date_of_birth: Optional[str] = None
     gender: str = "prefer_not_to_say"
     gender_self_describe: Optional[str] = None
     academic_year: str = "other"
@@ -28,16 +28,16 @@ def complete_onboarding(payload: OnboardingPayload, db: Session = Depends(get_db
     db.execute(
         text("""
             INSERT INTO device_profiles (
-                device_id, university, university_other, age_range,
+                device_id, university, university_other, date_of_birth,
                 gender, gender_self_describe, academic_year, first_experience
             ) VALUES (
-                :device_id, :university, :university_other, :age_range,
+                :device_id, :university, :university_other, :date_of_birth,
                 :gender, :gender_self_describe, :academic_year, :first_experience
             )
             ON CONFLICT (device_id) DO UPDATE SET
                 university = EXCLUDED.university,
                 university_other = EXCLUDED.university_other,
-                age_range = EXCLUDED.age_range,
+                date_of_birth = EXCLUDED.date_of_birth,
                 gender = EXCLUDED.gender,
                 gender_self_describe = EXCLUDED.gender_self_describe,
                 academic_year = EXCLUDED.academic_year,
@@ -48,7 +48,7 @@ def complete_onboarding(payload: OnboardingPayload, db: Session = Depends(get_db
             "device_id": payload.device_id,
             "university": payload.university,
             "university_other": payload.university_other,
-            "age_range": payload.age_range,
+            "date_of_birth": payload.date_of_birth,
             "gender": payload.gender,
             "gender_self_describe": payload.gender_self_describe,
             "academic_year": payload.academic_year,

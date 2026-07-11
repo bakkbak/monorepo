@@ -36,8 +36,8 @@ export const HERD_REGISTRY: Record<string, HerdInfo> = {
   'opj':             { displayName: 'OPJ',             emoji: '🏫', herdId: 'opj', logo: '/herds/opj.svg', isUniversityHerd: true },
 };
 
-// Default herds every user gets
-export const DEFAULT_HERD_IDS = ['rvu', 'opj'];
+// No hardcoded default herds — users get circles from onboarding choices
+export const DEFAULT_HERD_IDS: string[] = [];
 
 // All herds flagged as university/school herds (used by Trending page)
 export function getUniversityHerdIds(): string[] {

@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Lock } from 'lucide-react';
+import { ChevronLeft, Lock, GraduationCap, Search } from 'lucide-react';
 import { submitOnboarding } from '../api';
 import { HERD_REGISTRY } from '../utils';
 import {
   UNIVERSITY_OPTIONS,
   INTEREST_OPTIONS,
   INTEREST_CATEGORIES,
-  AGE_OPTIONS,
   GENDER_OPTIONS,
   ACADEMIC_YEAR_OPTIONS,
   FIRST_EXPERIENCE_OPTIONS,
   INTEREST_TO_CIRCLE_MAP,
+  UNIVERSITY_TO_CIRCLE_MAP,
 } from '../onboarding-data';
 
 interface OnboardingFlowProps {
@@ -77,13 +77,19 @@ function UniversityScreen({
       <button onClick={onBack} className="p-2 -ml-2 mb-2">
         <ChevronLeft className="w-6 h-6 text-black dark:text-white" />
       </button>
-      <h2
-        className="text-3xl font-bold text-black dark:text-white mb-2"
-        style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}
-      >
-        Choose Your University
-      </h2>
-      <p className="text-gray-500 dark:text-gray-400 mb-8">Connect with your campus community</p>
+
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl bg-yellow-400 flex items-center justify-center">
+          <GraduationCap className="w-5 h-5 text-black" />
+        </div>
+        <h2
+          className="text-3xl font-bold text-black dark:text-white"
+          style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}
+        >
+          Your university
+        </h2>
+      </div>
+      <p className="text-gray-500 dark:text-gray-400 mb-8">This connects you with your campus community and unlocks university-exclusive content.</p>
 
       <div className="space-y-3">
         {UNIVERSITY_OPTIONS.map((uni) => (
@@ -92,37 +98,43 @@ function UniversityScreen({
             onClick={() => onSelect(selected === uni.id ? null : uni.id)}
             className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-all active:scale-[0.98] ${
               selected === uni.id
-                ? 'border-black dark:border-white bg-yellow-400 text-black'
-                : 'border-black/20 dark:border-white/20 bg-white dark:bg-[#252525] text-black dark:text-white'
+                ? 'border-black dark:border-white bg-yellow-400 text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)]'
+                : 'border-black/15 dark:border-white/15 bg-white dark:bg-[#252525] text-black dark:text-white hover:border-black/30 dark:hover:border-white/30'
             }`}
           >
             <span className="text-2xl">{uni.emoji}</span>
-            <span className="font-semibold text-left">{uni.label}</span>
+            <span className="font-semibold text-left flex-1">{uni.label}</span>
+            {selected === uni.id && (
+              <span className="text-lg">✓</span>
+            )}
           </button>
         ))}
       </div>
 
       {selected === 'other' && (
-        <input
-          type="text"
-          value={otherText}
-          onChange={(e) => onOtherChange(e.target.value)}
-          placeholder="Enter your institution"
-          className="w-full mt-4 px-5 py-4 rounded-2xl border-2 border-black/20 dark:border-white/20 bg-white dark:bg-[#252525] text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
-        />
+        <div className="relative mt-4">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={otherText}
+            onChange={(e) => onOtherChange(e.target.value)}
+            placeholder="Search for your institution..."
+            className="w-full pl-11 pr-5 py-4 rounded-2xl border-2 border-black/15 dark:border-white/15 bg-white dark:bg-[#252525] text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+          />
+        </div>
       )}
 
       <div className="mt-8 space-y-3">
         <button
           onClick={onContinue}
           disabled={selected === 'other' && !otherText.trim()}
-          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg border-2 border-black dark:border-white active:scale-95 transition-transform disabled:opacity-40"
+          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg active:scale-95 transition-transform disabled:opacity-40"
         >
           Continue
         </button>
         <button
           onClick={onSkip}
-          className="w-full py-3 text-gray-500 dark:text-gray-400 font-medium"
+          className="w-full py-3 text-gray-400 dark:text-gray-500 font-medium text-sm"
         >
           Skip for now
         </button>
@@ -192,7 +204,7 @@ function InterestsScreen({
         <button
           onClick={onContinue}
           disabled={selected.size < 5}
-          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg border-2 border-black dark:border-white active:scale-95 transition-transform disabled:opacity-40"
+          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg active:scale-95 transition-transform disabled:opacity-40"
         >
           Continue
         </button>
@@ -202,28 +214,30 @@ function InterestsScreen({
 }
 
 function AboutYouScreen({
-  ageRange,
+  dateOfBirth,
   gender,
   genderSelfDescribe,
   academicYear,
-  onAgeChange,
+  onDobChange,
   onGenderChange,
   onGenderDescribeChange,
   onYearChange,
   onContinue,
   onBack,
 }: {
-  ageRange: string;
+  dateOfBirth: string;
   gender: string;
   genderSelfDescribe: string;
   academicYear: string;
-  onAgeChange: (v: string) => void;
+  onDobChange: (v: string) => void;
   onGenderChange: (v: string) => void;
   onGenderDescribeChange: (v: string) => void;
   onYearChange: (v: string) => void;
   onContinue: () => void;
   onBack: () => void;
 }) {
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div className="animate-slide-left">
       <button onClick={onBack} className="p-2 -ml-2 mb-2">
@@ -239,22 +253,14 @@ function AboutYouScreen({
 
       <div className="space-y-6 pb-28">
         <div>
-          <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Age</h3>
-          <div className="flex flex-wrap gap-2">
-            {AGE_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => onAgeChange(ageRange === opt.id ? '' : opt.id)}
-                className={`px-4 py-2.5 rounded-full border-2 font-medium transition-all active:scale-95 ${
-                  ageRange === opt.id
-                    ? 'bg-yellow-400 text-black border-black'
-                    : 'bg-white dark:bg-[#252525] text-black dark:text-white border-black/20 dark:border-white/20'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+          <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Date of birth</h3>
+          <input
+            type="date"
+            value={dateOfBirth}
+            onChange={(e) => onDobChange(e.target.value)}
+            max={today}
+            className="w-full px-5 py-3.5 rounded-2xl border-2 border-black/20 dark:border-white/20 bg-white dark:bg-[#252525] text-black dark:text-white focus:outline-none focus:border-yellow-400 transition-colors"
+          />
         </div>
 
         <div>
@@ -307,7 +313,7 @@ function AboutYouScreen({
         <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-[#252525]">
           <Lock className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
           <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            Your information stays private. Your age, gender, and university help us personalize your experience and keep Teevo safe. Your identity is never shown to other users.
+            Your information stays private. Your date of birth, gender, and university help us personalize your experience and keep Teevo safe. Your identity is never shown to other users.
           </p>
         </div>
       </div>
@@ -315,7 +321,7 @@ function AboutYouScreen({
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#1a1a1a] border-t border-gray-200 dark:border-gray-700 max-w-md mx-auto">
         <button
           onClick={onContinue}
-          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg border-2 border-black dark:border-white active:scale-95 transition-transform"
+          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg active:scale-95 transition-transform"
         >
           Continue
         </button>
@@ -326,12 +332,14 @@ function AboutYouScreen({
 
 function CirclesScreen({
   interests,
+  university,
   selectedCircles,
   onToggle,
   onContinue,
   onBack,
 }: {
   interests: Set<string>;
+  university: string | null;
   selectedCircles: Set<string>;
   onToggle: (id: string) => void;
   onContinue: () => void;
@@ -342,6 +350,10 @@ function CirclesScreen({
     const mapped = INTEREST_TO_CIRCLE_MAP[interest];
     if (mapped) mapped.forEach((id) => recommendedIds.add(id));
   });
+  if (university) {
+    const uniCircles = UNIVERSITY_TO_CIRCLE_MAP[university];
+    if (uniCircles) uniCircles.forEach((id) => recommendedIds.add(id));
+  }
 
   const circleList = Array.from(recommendedIds)
     .map((id) => HERD_REGISTRY[id])
@@ -428,7 +440,7 @@ function CirclesScreen({
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#1a1a1a] border-t border-gray-200 dark:border-gray-700 max-w-md mx-auto">
         <button
           onClick={onContinue}
-          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg border-2 border-black dark:border-white active:scale-95 transition-transform"
+          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg active:scale-95 transition-transform"
         >
           Continue
         </button>
@@ -468,7 +480,7 @@ function FirstExperienceScreen({
             onClick={() => onSelect(opt.id)}
             className={`w-full flex items-center gap-4 px-5 py-5 rounded-2xl border-2 transition-all active:scale-[0.98] text-left ${
               selected === opt.id
-                ? 'border-black dark:border-white bg-yellow-400 text-black'
+                ? 'border-yellow-400 bg-yellow-400 text-black'
                 : 'border-black/20 dark:border-white/20 bg-white dark:bg-[#252525] text-black dark:text-white'
             }`}
           >
@@ -487,7 +499,7 @@ function FirstExperienceScreen({
         <button
           onClick={onContinue}
           disabled={!selected}
-          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg border-2 border-black dark:border-white active:scale-95 transition-transform disabled:opacity-40"
+          className="w-full py-4 bg-black dark:bg-white text-yellow-400 dark:text-black rounded-full font-bold text-lg active:scale-95 transition-transform disabled:opacity-40"
         >
           Let's Go
         </button>
@@ -564,14 +576,13 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
   const [university, setUniversity] = useState<string | null>(null);
   const [universityOther, setUniversityOther] = useState('');
   const [interests, setInterests] = useState<Set<string>>(new Set());
-  const [ageRange, setAgeRange] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState('');
   const [genderSelfDescribe, setGenderSelfDescribe] = useState('');
   const [academicYear, setAcademicYear] = useState('');
   const [selectedCircles, setSelectedCircles] = useState<Set<string>>(new Set());
   const [firstExperience, setFirstExperience] = useState('');
 
-  // Pre-select recommended circles when moving to step 5
   useEffect(() => {
     if (step === 5 && selectedCircles.size === 0) {
       const recommended = new Set<string>();
@@ -579,6 +590,10 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
         const mapped = INTEREST_TO_CIRCLE_MAP[interest];
         if (mapped) mapped.forEach((id) => recommended.add(id));
       });
+      if (university) {
+        const uniCircles = UNIVERSITY_TO_CIRCLE_MAP[university];
+        if (uniCircles) uniCircles.forEach((id) => recommended.add(id));
+      }
       if (recommended.size > 0) setSelectedCircles(recommended);
     }
   }, [step]);
@@ -616,7 +631,7 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
         university_other: university === 'other' ? universityOther : null,
         interests: Array.from(interests),
         interest_categories: interestCategories,
-        age_range: ageRange || 'prefer_not_to_say',
+        date_of_birth: dateOfBirth || null,
         gender: gender || 'prefer_not_to_say',
         gender_self_describe: gender === 'self_describe' ? genderSelfDescribe : null,
         academic_year: academicYear || 'other',
@@ -673,11 +688,11 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
 
       {step === 4 && (
         <AboutYouScreen
-          ageRange={ageRange}
+          dateOfBirth={dateOfBirth}
           gender={gender}
           genderSelfDescribe={genderSelfDescribe}
           academicYear={academicYear}
-          onAgeChange={setAgeRange}
+          onDobChange={setDateOfBirth}
           onGenderChange={setGender}
           onGenderDescribeChange={setGenderSelfDescribe}
           onYearChange={setAcademicYear}
@@ -689,6 +704,7 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
       {step === 5 && (
         <CirclesScreen
           interests={interests}
+          university={university}
           selectedCircles={selectedCircles}
           onToggle={toggleCircle}
           onContinue={() => setStep(6)}

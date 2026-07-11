@@ -238,6 +238,34 @@ export async function markNotificationsRead(device_id: string, notification_ids:
   });
 }
 
+// --- Onboarding ---
+
+export type OnboardingPayload = {
+  device_id: string;
+  university: string | null;
+  university_other: string | null;
+  interests: string[];
+  interest_categories: Record<string, string>;
+  age_range: string;
+  gender: string;
+  gender_self_describe: string | null;
+  academic_year: string;
+  circle_ids: string[];
+  first_experience: string;
+};
+
+export async function submitOnboarding(payload: OnboardingPayload) {
+  return request<{ status: string }>('/onboarding/complete', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getOnboardingStatus(device_id: string) {
+  const qs = new URLSearchParams({ device_id });
+  return request<{ completed: boolean }>(`/onboarding/status?${qs}`);
+}
+
 // --- Reports ---
 
 export async function reportPost(params: {

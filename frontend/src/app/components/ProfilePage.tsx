@@ -117,7 +117,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
         <button
           key={c.id}
           onClick={() => handleCommentTap(c)}
-          className="w-full text-left bg-white rounded-xl border-2 border-black overflow-hidden hover:border-yellow-500 transition-colors"
+          className="w-full text-left bg-white dark:bg-surface-elevated rounded-xl overflow-hidden transition-colors"
         >
           {/* Your comment */}
           <div className="px-4 pt-4 pb-3">
@@ -126,11 +126,11 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               <span className="text-xs font-medium text-yellow-600">Your comment</span>
               <span className="text-xs text-gray-400">{getTimeAgo(c.comment_created_at)}</span>
             </div>
-            <p className="text-black leading-relaxed">{c.comment_content}</p>
+            <p className="text-black dark:text-gray-200 leading-relaxed">{c.comment_content}</p>
           </div>
 
           {/* Parent post context */}
-          <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 flex items-center gap-3">
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1e1e1e] px-4 py-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden">
               {getCommunityLogo(community) ? (
                 <img src={getCommunityLogo(community)} alt={community} className="w-full h-full object-cover" />
@@ -139,8 +139,8 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-500">{community}</p>
-              <p className="text-sm text-gray-700 truncate">{c.post_content}</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{community}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{c.post_content}</p>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </div>
@@ -199,7 +199,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     }
 
     return allPosts.map((post) => (
-      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-[#1a1a1a] rounded-xl border-2 border-black dark:border-white">
+      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-surface-elevated rounded-xl">
         {post._isRepost && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
             <Repeat2 className="w-3.5 h-3.5 text-yellow-600" />
@@ -299,8 +299,8 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     return notifications.map((n) => (
       <div
         key={n.id}
-        className={`bg-white rounded-xl border-2 overflow-hidden ${
-          n.is_read ? 'border-black' : 'border-yellow-400'
+        className={`bg-white dark:bg-surface-elevated rounded-xl overflow-hidden ${
+          !n.is_read ? 'border-l-4 border-yellow-400' : ''
         }`}
       >
         <div className="px-4 pt-4 pb-3">
@@ -311,7 +311,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
             </span>
             <span className="text-xs text-gray-400">{getTimeAgo(n.created_at)}</span>
           </div>
-          <p className="text-black leading-relaxed">{n.body}</p>
+          <p className="text-black dark:text-gray-200 leading-relaxed">{n.body}</p>
         </div>
       </div>
     ));
@@ -329,10 +329,10 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className={`p-3 rounded-full border-2 transition-colors relative ${
+              className={`p-3 rounded-full transition-colors relative ${
                 showNotifications
-                  ? 'border-yellow-400 bg-yellow-400 hover:bg-yellow-300'
-                  : 'border-black dark:border-white bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-900'
+                  ? 'bg-yellow-400 hover:bg-yellow-300'
+                  : 'bg-gray-100 dark:bg-surface-elevated hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
               <Bell className="w-6 h-6 text-black dark:text-white" />
@@ -344,7 +344,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
             </button>
             <button
               onClick={() => setShowSettings(true)}
-              className="p-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+              className="p-3 rounded-full bg-gray-100 dark:bg-surface-elevated hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               <Settings className="w-6 h-6 text-black dark:text-white" />
             </button>

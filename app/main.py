@@ -2,7 +2,16 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
-from .routes import posts, devices, verify, comments, herds, notifications, images, onboarding
+from .routes import (
+    posts,
+    devices,
+    verify,
+    comments,
+    herds,
+    notifications,
+    images,
+    onboarding,
+)
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):

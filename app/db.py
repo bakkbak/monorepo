@@ -181,13 +181,31 @@ def init_db():
                 device_id TEXT PRIMARY KEY REFERENCES devices(id),
                 university TEXT,
                 university_other TEXT,
-                age_range TEXT,
+                date_of_birth DATE,
                 gender TEXT,
                 gender_self_describe TEXT,
                 academic_year TEXT,
                 first_experience TEXT,
                 onboarding_completed_at TIMESTAMPTZ DEFAULT NOW()
             )
+        """)
+        )
+        conn.execute(
+            text("""
+            DO $$ BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'device_profiles' AND column_name = 'age_range'
+                ) THEN
+                    ALTER TABLE device_profiles DROP COLUMN age_range;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'device_profiles' AND column_name = 'date_of_birth'
+                ) THEN
+                    ALTER TABLE device_profiles ADD COLUMN date_of_birth DATE;
+                END IF;
+            END $$;
         """)
         )
         conn.execute(

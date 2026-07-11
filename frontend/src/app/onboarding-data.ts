@@ -55,17 +55,11 @@ export const UNIVERSITY_OPTIONS = [
   { id: 'other', label: 'Other', emoji: '🏛️' },
 ] as const;
 
-export const AGE_OPTIONS = [
-  { id: 'under_18', label: 'Under 18' },
-  { id: '18', label: '18' },
-  { id: '19', label: '19' },
-  { id: '20', label: '20' },
-  { id: '21', label: '21' },
-  { id: '22', label: '22' },
-  { id: '23', label: '23' },
-  { id: '24_plus', label: '24+' },
-  { id: 'prefer_not_to_say', label: 'Prefer not to say' },
-] as const;
+export const UNIVERSITY_TO_CIRCLE_MAP: Record<string, string[]> = {
+  opj: ['opj'],
+  rvu: ['rvu'],
+  rvce: ['rvu'],
+};
 
 export const GENDER_OPTIONS = [
   { id: 'male', label: 'Male' },

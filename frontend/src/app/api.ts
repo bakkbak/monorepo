@@ -246,7 +246,7 @@ export type OnboardingPayload = {
   university_other: string | null;
   interests: string[];
   interest_categories: Record<string, string>;
-  age_range: string;
+  date_of_birth: string | null;
   gender: string;
   gender_self_describe: string | null;
   academic_year: string;

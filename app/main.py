@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
+from .db import init_db
 from .routes import (
     posts,
     devices,
@@ -27,6 +28,8 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 
 
 app = FastAPI(title="BakBak API")
+
+init_db()
 
 app.add_middleware(NoCacheMiddleware)
 app.add_middleware(

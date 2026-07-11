@@ -2,6 +2,7 @@ import { registerDevice } from './api';
 
 const DEVICE_ID_KEY = 'teevo_device_id';
 const FINGERPRINT_KEY = 'teevo_fingerprint';
+export const ONBOARDING_COMPLETE_KEY = 'teevo_onboarding_complete';
 
 function generateFingerprint(): string {
   const parts = [

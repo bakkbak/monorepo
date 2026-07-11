@@ -7,11 +7,12 @@ import { ThreadView } from './components/ThreadView';
 import { PostComposer } from './components/PostComposer';
 import { TrendingPage } from './components/TrendingPage';
 import { SplashScreen } from './components/SplashScreen';
+import { OnboardingFlow } from './components/OnboardingFlow';
 import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
-import { getOrCreateDeviceId } from './device';
+import { getOrCreateDeviceId, ONBOARDING_COMPLETE_KEY } from './device';
 import { useTheme } from './theme';
 import { getLocation, type Location } from './location';
-import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus } from './api';
+import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus, getOnboardingStatus } from './api';
 import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, isUniversityFeed, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
@@ -24,7 +25,7 @@ export default function App() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewingPost, setViewingPost] = useState<Post | null>(null);
   const [showSplash, setShowSplash] = useState(true);
-
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -145,9 +146,21 @@ export default function App() {
 
   useEffect(() => {
     Promise.all([getOrCreateDeviceId(), getLocation()]).then(
-      ([did, loc]) => {
+      async ([did, loc]) => {
         setDeviceId(did);
         setLocation(loc);
+        if (!localStorage.getItem(ONBOARDING_COMPLETE_KEY)) {
+          try {
+            const { completed } = await getOnboardingStatus(did);
+            if (!completed) {
+              setShowOnboarding(true);
+            } else {
+              localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+            }
+          } catch {
+            setShowOnboarding(true);
+          }
+        }
       },
       (err) => setFeedError(err.message),
     );
@@ -225,6 +238,25 @@ export default function App() {
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (showOnboarding && deviceId) {
+    return (
+      <OnboardingFlow
+        deviceId={deviceId}
+        onFinish={(firstExperience) => {
+          localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+          setShowOnboarding(false);
+          refreshJoinedHerds();
+          if (firstExperience === 'browse_trending') setActiveTab('trending');
+          else if (firstExperience === 'explore_circles') setActiveTab('discover');
+          else if (firstExperience === 'make_first_post') {
+            setActiveTab('home');
+            setComposerOpen(true);
+          }
+        }}
+      />
+    );
   }
 
   if (viewingPost) {

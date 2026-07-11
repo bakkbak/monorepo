@@ -177,6 +177,32 @@ def init_db():
         )
         conn.execute(
             text("""
+            CREATE TABLE IF NOT EXISTS device_profiles (
+                device_id TEXT PRIMARY KEY REFERENCES devices(id),
+                university TEXT,
+                university_other TEXT,
+                age_range TEXT,
+                gender TEXT,
+                gender_self_describe TEXT,
+                academic_year TEXT,
+                first_experience TEXT,
+                onboarding_completed_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+        )
+        conn.execute(
+            text("""
+            CREATE TABLE IF NOT EXISTS device_interests (
+                device_id TEXT NOT NULL REFERENCES devices(id),
+                interest TEXT NOT NULL,
+                category TEXT NOT NULL,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                PRIMARY KEY (device_id, interest)
+            )
+        """)
+        )
+        conn.execute(
+            text("""
             INSERT INTO university_domains (domain, active)
             VALUES ('jgu.edu.in', TRUE)
             ON CONFLICT (domain) DO NOTHING

@@ -72,6 +72,27 @@ body:where(.dark *) {
   animation: fade-in 0.25s ease-out forwards;
 }
 
+/* Onboarding checkmark stagger */
+@keyframes check-in {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-check-in {
+  animation: check-in 0.4s ease-out forwards;
+}
+
+/* Screen transition slide */
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-left {
+  animation: slide-left 0.3s ease-out forwards;
+}
+
 /* Hide scrollbar for horizontal tabs */
 .scrollbar-hide {
   -ms-overflow-style: none;

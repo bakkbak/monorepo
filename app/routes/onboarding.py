@@ -75,6 +75,10 @@ def complete_onboarding(payload: OnboardingPayload, db: Session = Depends(get_db
             },
         )
 
+    db.execute(
+        text("DELETE FROM herd_memberships WHERE device_id = :device_id"),
+        {"device_id": payload.device_id},
+    )
     for herd_id in payload.circle_ids:
         db.execute(
             text("""

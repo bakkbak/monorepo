@@ -163,7 +163,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
           <input
             type="text"
             placeholder="search circles..."
-            className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-[#1a1a1a] dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-elevated dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
       </div>
@@ -173,7 +173,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
         {circles.map((circle) => (
           <div
             key={circle.id}
-            className="relative rounded-2xl border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-[#1a1a1a]"
+            className="relative rounded-2xl overflow-hidden bg-white dark:bg-surface-elevated"
           >
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5">
@@ -187,7 +187,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
             {/* Content */}
             <div className="relative flex items-center gap-4 p-4">
               {/* Icon */}
-              <div className={`${circle.color} w-14 h-14 rounded-2xl border-2 border-black flex items-center justify-center text-2xl flex-shrink-0`}>
+              <div className={`${circle.color} w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0`}>
                 {circle.emoji}
               </div>
 
@@ -198,7 +198,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
                     {circle.name}
                   </h3>
                   {circle.trending && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-400 rounded-full border border-black">
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-400 rounded-full">
                       <Flame className="w-3 h-3" />
                       <span className="text-xs font-bold">HOT</span>
                     </div>
@@ -212,10 +212,10 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
               {/* Join Button */}
               <button
                 onClick={() => handleJoin(circle)}
-                className={`px-5 py-2 rounded-full font-bold text-sm border-2 border-black transition-all flex-shrink-0 ${
+                className={`px-5 py-2 rounded-full font-bold text-sm transition-all flex-shrink-0 ${
                   isCircleJoined(circle)
                     ? 'bg-yellow-400 text-black'
-                    : 'bg-white text-black hover:bg-gray-50 active:scale-95'
+                    : 'bg-gray-100 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95'
                 }`}
               >
                 {isCircleJoined(circle) ? '✓ Joined' : 'Join'}
@@ -240,13 +240,13 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowRvuDialog(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-            <div className="bg-white rounded-2xl border-2 border-black w-full max-w-sm overflow-hidden">
+            <div className="bg-white dark:bg-surface-elevated rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 pt-5 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-black">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden">
                     <img src="/herds/rvu.svg" alt="RVU" className="w-full h-full object-cover" />
                   </div>
-                  <h3 className="text-lg font-bold text-black">RVU</h3>
+                  <h3 className="text-lg font-bold text-black dark:text-white">RVU</h3>
                 </div>
                 <button
                   onClick={() => setShowRvuDialog(false)}
@@ -255,7 +255,7 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
-              <p className="px-5 pb-4 text-sm text-gray-500">
+              <p className="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400">
                 Join the RVU campus circle to see and post with your college community.
               </p>
               <div className="px-5 pb-5">
@@ -286,9 +286,9 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
                     }
                     setShowRvuDialog(false);
                   }}
-                  className={`w-full py-3 rounded-xl font-bold text-sm border-2 border-black transition-all ${
+                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
                     joinedHerdIds.has('rvu')
-                      ? 'bg-gray-100 text-black'
+                      ? 'bg-gray-100 dark:bg-gray-700 text-black dark:text-white'
                       : 'bg-yellow-400 text-black'
                   }`}
                 >

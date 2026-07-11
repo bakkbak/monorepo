@@ -79,7 +79,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-lg shadow-sm border-2 border-black dark:border-white mx-3">
+      <div className="bg-white dark:bg-surface-elevated rounded-lg shadow-sm mx-3">
         <div className="cursor-pointer" onClick={onClick}>
           <div className="flex items-center gap-3 px-4 pt-4 pb-3">
             <div className="w-12 h-12 rounded-full bg-yellow-400 border-2 border-black flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
@@ -104,7 +104,7 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
                 <MoreHorizontal className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
               {showReport && (
-                <div className="absolute right-0 top-10 bg-white dark:bg-gray-900 border-2 border-black dark:border-white rounded-xl shadow-lg z-20 w-56 overflow-hidden">
+                <div className="absolute right-0 top-10 bg-white dark:bg-gray-900 rounded-xl shadow-lg z-20 w-56 overflow-hidden">
                   <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Report post</span>
                     <button onClick={(e) => { e.stopPropagation(); setShowReport(false); }} className="p-1 rounded-full hover:bg-gray-100">
@@ -221,7 +221,7 @@ export function PostFeed({ posts, loading, error, deviceId, onPostClick, onRetry
         {onRetry && (
           <button
             onClick={onRetry}
-            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-medium rounded-full border-2 border-black active:scale-95 transition-transform"
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-medium rounded-full active:scale-95 transition-transform"
           >
             <RefreshCw className="w-4 h-4" />
             Retry

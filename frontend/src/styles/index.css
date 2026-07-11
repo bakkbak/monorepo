@@ -10,6 +10,7 @@
   --color-foreground: #111111;
   --color-teevo: #F5C800;
   --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
   --color-muted: #888888;
   --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Noto Sans', sans-serif;
@@ -27,6 +28,7 @@ body {
 body:where(.dark *) {
   background: #1a1a1a;
   color: #ffffff;
+  --color-surface-elevated: #242424;
 }
 
 .font-display {

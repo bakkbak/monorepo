@@ -306,8 +306,8 @@ export default function App() {
                   onClick={() => setSelectedFeed(option)}
                   className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap active:scale-95 ${
                     selectedFeed === option
-                      ? 'bg-black text-yellow-400 border-2 border-black'
-                      : 'bg-white dark:bg-gray-900 text-black dark:text-white border-2 border-black dark:border-white hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'bg-black text-yellow-400'
+                      : 'bg-white dark:bg-gray-900 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   {option}

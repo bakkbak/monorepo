@@ -71,7 +71,7 @@ export function SettingsSheet({ deviceId, onClose, theme, onToggleTheme }: Setti
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-3xl z-50 pb-24">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-3xl border-t-2 border-x-2 border-black dark:border-white z-50 pb-24">
         {/* Handle */}
         <div className="flex justify-center pt-4 pb-2">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />

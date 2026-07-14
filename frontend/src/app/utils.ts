@@ -22,18 +22,21 @@ export type HerdInfo = {
 };
 
 export const HERD_REGISTRY: Record<string, HerdInfo> = {
-  'ipl':             { displayName: 'IPL',             emoji: '🏏', herdId: 'ipl' },
-  'bollywood':       { displayName: 'Bollywood',       emoji: '🎬', herdId: 'bollywood' },
-  'nba':             { displayName: 'NBA',             emoji: '🏀', herdId: 'nba' },
-  'premier-league':  { displayName: 'Premier League',  emoji: '⚽', herdId: 'premier-league' },
-  'rcb':             { displayName: 'RCB',             emoji: '🔥', herdId: 'rcb' },
-  'pokemon':         { displayName: 'Pokemon',         emoji: '⚡', herdId: 'pokemon' },
-  'music':           { displayName: 'Music',           emoji: '🎵', herdId: 'music' },
-  'swifties':        { displayName: 'Swifties',        emoji: '💜', herdId: 'swifties' },
-  'university':      { displayName: 'University',      emoji: '🏛️', herdId: 'university', isUniversityHerd: true },
-  'gaming':          { displayName: 'Gaming',          emoji: '🎮', herdId: 'gaming' },
-  'rvu':             { displayName: 'RVU',             emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isUniversityHerd: true },
-  'opj':             { displayName: 'OPJ',             emoji: '🏫', herdId: 'opj', logo: '/herds/opj.svg', isUniversityHerd: true },
+  'ipl':                { displayName: 'IPL',                emoji: '🏏', herdId: 'ipl' },
+  'nba':                { displayName: 'NBA',                emoji: '🏀', herdId: 'nba' },
+  'premier-league':     { displayName: 'Premier League',     emoji: '⚽', herdId: 'premier-league' },
+  'gaming':             { displayName: 'Gaming',             emoji: '🎮', herdId: 'gaming' },
+  'music':              { displayName: 'Music',              emoji: '🎵', herdId: 'music' },
+  'movies':             { displayName: 'Movies',             emoji: '🎬', herdId: 'movies' },
+  'confessions':        { displayName: 'Confessions',        emoji: '🤫', herdId: 'confessions' },
+  'relationship-advice':{ displayName: 'Relationship Advice',emoji: '💕', herdId: 'relationship-advice' },
+  'meme-central':       { displayName: 'Meme Central',       emoji: '😂', herdId: 'meme-central' },
+  'hot-takes':          { displayName: 'Hot Takes',          emoji: '🔥', herdId: 'hot-takes' },
+  'study-hacks':        { displayName: 'Study Hacks',        emoji: '📚', herdId: 'study-hacks' },
+  'computer-science':   { displayName: 'Computer Science',   emoji: '💻', herdId: 'computer-science' },
+  'business-street':    { displayName: 'Business Street',    emoji: '💰', herdId: 'business-street' },
+  'rvu':                { displayName: 'RVU',                emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isUniversityHerd: true },
+  'opj':                { displayName: 'OPJ',                emoji: '🏫', herdId: 'opj', logo: '/herds/opj.svg', isUniversityHerd: true },
 };
 
 // No hardcoded default herds — users get circles from onboarding choices
@@ -114,16 +117,9 @@ export const communityEmojis: Record<string, string> = buildCommunityEmojis([]);
 // Legacy static maps — kept for backward compat but prefer the dynamic functions
 export const FEED_HERD_MAP: Record<string, { herd_type?: string; herd_id?: string }> = {
   'For you': { herd_type: 'local' },
-  'University': { herd_type: 'university' },
-  'RVU': { herd_type: 'global', herd_id: 'rvu' },
-  'OPJ': { herd_type: 'global', herd_id: 'opj' },
 };
 
-export const COMMUNITY_HERD_MAP: Record<string, { herd_type: string; herd_id?: string }> = {
-  'University': { herd_type: 'university' },
-  'RVU': { herd_type: 'global', herd_id: 'rvu' },
-  'OPJ': { herd_type: 'global', herd_id: 'opj' },
-};
+export const COMMUNITY_HERD_MAP: Record<string, { herd_type: string; herd_id?: string }> = {};
 
 export function getTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -140,7 +136,6 @@ export function feedPostToPost(fp: FeedPost): Post {
 
   let community: string;
   if (fp.herd_id) {
-    const info = HERD_REGISTRY[fp.herd_id];
     community = herdIdToDisplayName(fp.herd_id);
   } else if (fp.herd_type === 'university') {
     community = 'University';

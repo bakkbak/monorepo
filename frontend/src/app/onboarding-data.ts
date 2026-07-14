@@ -25,14 +25,12 @@ export const INTEREST_OPTIONS: InterestOption[] = [
   { id: 'engineering', label: 'Engineering', emoji: '⚙️', category: 'academics' },
   { id: 'business', label: 'Business', emoji: '📊', category: 'academics' },
   { id: 'law', label: 'Law', emoji: '⚖️', category: 'academics' },
-  { id: 'medicine', label: 'Medicine', emoji: '🩺', category: 'academics' },
   { id: 'design', label: 'Design', emoji: '🎨', category: 'academics' },
 
   { id: 'parties', label: 'Parties', emoji: '🎉', category: 'social' },
   { id: 'events', label: 'Events', emoji: '📅', category: 'social' },
   { id: 'clubs', label: 'Clubs', emoji: '🎯', category: 'social' },
   { id: 'fashion', label: 'Fashion', emoji: '👗', category: 'social' },
-  { id: 'photography', label: 'Photography', emoji: '📸', category: 'social' },
 
   { id: 'movies', label: 'Movies', emoji: '🎬', category: 'entertainment' },
   { id: 'anime', label: 'Anime', emoji: '🎌', category: 'entertainment' },
@@ -43,7 +41,6 @@ export const INTEREST_OPTIONS: InterestOption[] = [
 
   { id: 'internships', label: 'Internships', emoji: '💼', category: 'career' },
   { id: 'coding', label: 'Coding', emoji: '💻', category: 'career' },
-  { id: 'entrepreneurship', label: 'Entrepreneurship', emoji: '🚀', category: 'career' },
   { id: 'finance', label: 'Finance', emoji: '💰', category: 'career' },
   { id: 'consulting', label: 'Consulting', emoji: '🤝', category: 'career' },
 ];
@@ -86,10 +83,20 @@ export const FIRST_EXPERIENCE_OPTIONS = [
 ] as const;
 
 export const INTEREST_TO_CIRCLE_MAP: Record<string, string[]> = {
-  cricket: ['ipl', 'rcb'],
+  cricket: ['ipl'],
   football: ['premier-league'],
   gaming: ['gaming'],
-  music: ['music', 'swifties'],
-  movies: ['bollywood'],
-  anime: ['pokemon'],
+  music: ['music'],
+  movies: ['movies'],
+  confessions: ['confessions'],
+  relationships: ['relationship-advice'],
+  memes: ['meme-central'],
+  campus_drama: ['confessions'],
+  hot_takes: ['hot-takes'],
+  engineering: ['study-hacks'],
+  business: ['study-hacks', 'business-street'],
+  law: ['study-hacks'],
+  design: ['study-hacks'],
+  coding: ['computer-science'],
+  finance: ['business-street'],
 };

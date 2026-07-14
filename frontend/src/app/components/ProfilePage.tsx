@@ -199,7 +199,7 @@ export function ProfilePage({ deviceId, onPostClick, repostedPosts = [], onRepos
     }
 
     return allPosts.map((post) => (
-      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-[#1a1a1a] rounded-xl border-2 border-black dark:border-white">
+      <div key={`${post._isRepost ? 'repost-' : ''}${post.id}`} className="bg-white dark:bg-[#1a1a1a] rounded-xl border-2 border-black dark:border-gray-800">
         {post._isRepost && (
           <div className="flex items-center gap-1.5 px-4 pt-3 pb-0">
             <Repeat2 className="w-3.5 h-3.5 text-yellow-600" />

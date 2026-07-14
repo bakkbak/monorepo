@@ -1,99 +1,7 @@
-import { Search, TrendingUp, Flame, Settings, X } from 'lucide-react';
+import { Search, Settings, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { joinHerd, leaveHerd, getJoinedHerds } from '../api';
-
-const circles = [
-  {
-    id: 1,
-    name: 'IPL',
-    emoji: '🏏',
-    members: '45K',
-    trending: true,
-    color: 'bg-blue-500',
-    image: 'https://images.unsplash.com/photo-1624194611924-bb02300dad6c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmlja2V0JTIwYmF0JTIwYmFsbHxlbnwxfHx8fDE3NjgwMTM5MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  {
-    id: 2,
-    name: 'NBA',
-    emoji: '🏀',
-    members: '38K',
-    trending: false,
-    color: 'bg-orange-500',
-    image: 'https://images.unsplash.com/photo-1503525523076-ca4aa2e47535?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiYXNrZXRiYWxsJTIwaG9vcHxlbnwxfHx8fDE3Njc3MDQ0ODl8MA&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 3,
-    name: 'Premier League',
-    emoji: '⚽',
-    members: '52K',
-    trending: true,
-    color: 'bg-purple-500',
-    image: 'https://images.unsplash.com/photo-1625187538367-6a8483a79cc2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzb2NjZXIlMjBiYWxsJTIwZmllbGR8ZW58MXx8fHwxNjc3NzAzNDY2fDA&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 4,
-    name: 'RCB',
-    emoji: '🔥',
-    members: '67K',
-    trending: true,
-    color: 'bg-red-500',
-    image: 'https://images.unsplash.com/photo-1593766821405-f605e0f9535f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmlja2V0JTIwaGVsbWV0JTIwYmF0fGVufDF8fHx8MTc2NzgwODgxN3ww&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 5,
-    name: 'Pokemon',
-    emoji: '⚡',
-    members: '91K',
-    trending: true,
-    color: 'bg-yellow-500',
-    image: 'https://images.unsplash.com/photo-1638964758061-117853a20865?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxQaWthY2h1JTIwcG9rZW1vbnxlbnwxfHx8fDE3NjgwNTU2MzN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  {
-    id: 6,
-    name: 'Music',
-    emoji: '🎵',
-    members: '29K',
-    trending: false,
-    color: 'bg-teal-500',
-    image: 'https://images.unsplash.com/photo-1677533606085-f01c472408e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMG5vdGVzJTIwaW5zdHJ1bWVudHN8ZW58MXx8fHwxNjc3ODA4ODE3fDA&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 7,
-    name: 'Bollywood',
-    emoji: '🎬',
-    members: '73K',
-    trending: true,
-    color: 'bg-pink-500',
-    image: 'https://images.unsplash.com/photo-1695866648647-ab341ee14b7c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3ZpZSUyMHRoZWF0ZXIlMjBwb3Bjb3JufGVufDF8fHx8MTc2NzcyNDQ5MHww&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 8,
-    name: 'Swifties',
-    emoji: '💜',
-    members: '84K',
-    trending: true,
-    color: 'bg-purple-400',
-    image: 'https://images.unsplash.com/photo-1648260029310-5f1da359af9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwY3Jvd2QlMjBsaWdodHN8ZW58MXx8fHwxNzY3NzEwMjU0fDA&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 9,
-    name: 'University',
-    emoji: '🏛️',
-    members: '156K',
-    trending: true,
-    color: 'bg-indigo-500',
-    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwY2FtcHVzfGVufDF8fHx8MTY3NzgwODgxN3ww&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-  {
-    id: 10,
-    name: 'Gaming',
-    emoji: '🎮',
-    members: '112K',
-    trending: true,
-    color: 'bg-green-500',
-    image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnYW1pbmclMjBzZXR1cHxlbnwxfHx8fDE2Nzc4MDg4MTd8MA&ixlib=rb-4.1.0&q=80&w=1080'
-  },
-];
+import { HERD_REGISTRY } from '../utils';
 
 interface DiscoverPageProps {
   deviceId: string | null;
@@ -102,9 +10,19 @@ interface DiscoverPageProps {
 
 export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
   const [joinedHerdIds, setJoinedHerdIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
   const [showRvuDialog, setShowRvuDialog] = useState(false);
 
-  // Load joined herds from backend
+  const discoverCircles = Object.values(HERD_REGISTRY).filter(
+    (h) => !h.isUniversityHerd
+  );
+
+  const filteredCircles = searchQuery
+    ? discoverCircles.filter((c) =>
+        c.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : discoverCircles;
+
   useEffect(() => {
     if (!deviceId) return;
     getJoinedHerds(deviceId)
@@ -112,12 +30,10 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
       .catch(() => {});
   }, [deviceId]);
 
-  const handleJoin = async (circle: typeof circles[0]) => {
+  const handleJoin = async (herdId: string) => {
     if (!deviceId) return;
-    const herdId = circle.name.toLowerCase().replace(/\s+/g, '-');
     const isJoined = joinedHerdIds.has(herdId);
 
-    // Optimistic update
     setJoinedHerdIds((prev) => {
       const next = new Set(prev);
       if (isJoined) next.delete(herdId);
@@ -133,7 +49,6 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
       }
       onHerdsChanged?.();
     } catch {
-      // Rollback
       setJoinedHerdIds((prev) => {
         const next = new Set(prev);
         if (isJoined) next.add(herdId);
@@ -143,17 +58,21 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
     }
   };
 
-  const isCircleJoined = (circle: typeof circles[0]) => {
-    const herdId = circle.name.toLowerCase().replace(/\s+/g, '-');
-    return joinedHerdIds.has(herdId);
-  };
-
   return (
     <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-20">
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
-        <h1 className="text-4xl font-bold text-black dark:text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 700 }}>Discover</h1>
-        <p className="text-gray-500">find your vibe ✨</p>
+        <h1
+          className="text-4xl font-bold text-black dark:text-white mb-2"
+          style={{
+            fontFamily:
+              "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          Discover
+        </h1>
+        <p className="text-gray-500">find your vibe</p>
       </div>
 
       {/* Search Bar */}
@@ -163,6 +82,8 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
           <input
             type="text"
             placeholder="search circles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-black dark:border-white bg-white dark:bg-[#1a1a1a] dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
@@ -170,55 +91,34 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
 
       {/* Circles Grid */}
       <div className="px-4 space-y-3">
-        {circles.map((circle) => (
+        {filteredCircles.map((circle) => (
           <div
-            key={circle.id}
+            key={circle.herdId}
             className="relative rounded-2xl border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-[#1a1a1a]"
           >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <img
-                src={circle.image}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Content */}
             <div className="relative flex items-center gap-4 p-4">
-              {/* Icon */}
-              <div className={`${circle.color} w-14 h-14 rounded-2xl border-2 border-black flex items-center justify-center text-2xl flex-shrink-0`}>
+              {/* Emoji Icon */}
+              <div className="w-14 h-14 rounded-2xl border-2 border-black bg-yellow-400 flex items-center justify-center text-2xl flex-shrink-0">
                 {circle.emoji}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-bold text-black dark:text-white truncate">
-                    {circle.name}
-                  </h3>
-                  {circle.trending && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-400 rounded-full border border-black">
-                      <Flame className="w-3 h-3" />
-                      <span className="text-xs font-bold">HOT</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-sm text-gray-500 font-medium">
-                  {circle.members} members
-                </p>
+                <h3 className="text-lg font-bold text-black dark:text-white truncate">
+                  {circle.displayName}
+                </h3>
               </div>
 
               {/* Join Button */}
               <button
-                onClick={() => handleJoin(circle)}
+                onClick={() => handleJoin(circle.herdId)}
                 className={`px-5 py-2 rounded-full font-bold text-sm border-2 border-black transition-all flex-shrink-0 ${
-                  isCircleJoined(circle)
+                  joinedHerdIds.has(circle.herdId)
                     ? 'bg-yellow-400 text-black'
                     : 'bg-white text-black hover:bg-gray-50 active:scale-95'
                 }`}
               >
-                {isCircleJoined(circle) ? '✓ Joined' : 'Join'}
+                {joinedHerdIds.has(circle.herdId) ? '✓ Joined' : 'Join'}
               </button>
             </div>
           </div>
@@ -238,13 +138,20 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
       {/* RVU Dialog */}
       {showRvuDialog && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowRvuDialog(false)} />
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={() => setShowRvuDialog(false)}
+          />
           <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
             <div className="bg-white rounded-2xl border-2 border-black w-full max-w-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 pt-5 pb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-black">
-                    <img src="/herds/rvu.svg" alt="RVU" className="w-full h-full object-cover" />
+                    <img
+                      src="/herds/rvu.svg"
+                      alt="RVU"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <h3 className="text-lg font-bold text-black">RVU</h3>
                 </div>
@@ -256,7 +163,8 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
                 </button>
               </div>
               <p className="px-5 pb-4 text-sm text-gray-500">
-                Join the RVU campus circle to see and post with your college community.
+                Join the RVU campus circle to see and post with your college
+                community.
               </p>
               <div className="px-5 pb-5">
                 <button
@@ -271,9 +179,15 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
                     });
                     try {
                       if (isJoined) {
-                        await leaveHerd({ device_id: deviceId, herd_id: 'rvu' });
+                        await leaveHerd({
+                          device_id: deviceId,
+                          herd_id: 'rvu',
+                        });
                       } else {
-                        await joinHerd({ device_id: deviceId, herd_id: 'rvu' });
+                        await joinHerd({
+                          device_id: deviceId,
+                          herd_id: 'rvu',
+                        });
                       }
                       onHerdsChanged?.();
                     } catch {

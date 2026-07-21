@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
+import { storageGet, storageSet } from './storage';
 
 type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'teevo-theme';
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored === 'dark' ? 'dark' : 'light';
-  });
+  // Storage is async on native, so we default to light and hydrate the stored
+  // preference in an effect on first mount. The DOM class is applied on every
+  // theme change (including the initial hydration).
+  const [theme, setThemeState] = useState<Theme>('light');
+
+  useEffect(() => {
+    let cancelled = false;
+    storageGet(STORAGE_KEY).then((stored) => {
+      if (!cancelled && stored === 'dark') setThemeState('dark');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -17,7 +28,7 @@ export function useTheme() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem(STORAGE_KEY, theme);
+    void storageSet(STORAGE_KEY, theme);
   }, [theme]);
 
   const toggleTheme = () => setThemeState((t) => (t === 'dark' ? 'light' : 'dark'));

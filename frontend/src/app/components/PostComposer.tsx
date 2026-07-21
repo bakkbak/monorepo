@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Image } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface PostComposerProps {
   onClose: () => void;
@@ -22,13 +24,17 @@ function fileToBase64(file: File): Promise<string> {
 export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostComposerProps) {
   const [text, setText] = useState('');
   const [community, setCommunity] = useState(communities[0] || 'University');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // We hold the encoded image directly (base64 + content type) so the web file
+  // input and the native camera/gallery flow converge on one representation.
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageContentType, setImageContentType] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxChars = 280;
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const imagePreview = imageBase64 ? `data:${imageContentType};base64,${imageBase64}` : null;
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -42,39 +48,55 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
       return;
     }
 
-    setImageFile(file);
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
+    setImageBase64(await fileToBase64(file));
+    setImageContentType(file.type);
+  };
+
+  // Native: open the OS prompt to pick camera or photo library. The Camera
+  // plugin returns base64, which is exactly what /api/images/posts expect.
+  const handleNativePickImage = async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Prompt,
+        quality: 80,
+        correctOrientation: true,
+      });
+      if (!photo.base64String) return;
+      setImageBase64(photo.base64String);
+      setImageContentType(`image/${photo.format || 'jpeg'}`);
+    } catch {
+      // User cancelled the picker — no-op.
+    }
+  };
+
+  const handleImageButton = () => {
+    if (Capacitor.isNativePlatform()) {
+      void handleNativePickImage();
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const removeImage = () => {
-    setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImagePreview(null);
+    setImageBase64(null);
+    setImageContentType(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handlePost = async () => {
-    if (!text.trim() && !imageFile) return;
+    if (!text.trim() && !imageBase64) return;
     if (submitting) return;
     setSubmitting(true);
 
     try {
-      let base64: string | undefined;
-      let contentType: string | undefined;
-
-      if (imageFile) {
-        base64 = await fileToBase64(imageFile);
-        contentType = imageFile.type;
-      }
-
-      onPost(text.trim(), community, base64, contentType);
+      onPost(text.trim(), community, imageBase64 ?? undefined, imageContentType ?? undefined);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const canPost = text.trim() || imageFile;
+  const canPost = text.trim() || imageBase64;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -149,8 +171,8 @@ export function PostComposer({ onClose, onPost, communities = ['RVU'] }: PostCom
 
           <div className="flex justify-between items-center mt-1 mb-2">
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${imageFile ? 'text-yellow-500' : 'text-gray-500'}`}
+              onClick={handleImageButton}
+              className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${imageBase64 ? 'text-yellow-500' : 'text-gray-500'}`}
             >
               <Image className="w-5 h-5" />
             </button>

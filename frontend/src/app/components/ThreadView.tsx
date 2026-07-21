@@ -170,9 +170,9 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-20">
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-nav-safe">
       {/* Header */}
-      <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] border-b-2 border-gray-200 dark:border-gray-700 z-10 px-4 py-3 flex items-center gap-3">
+      <div className="safe-top sticky top-0 bg-white dark:bg-[#1a1a1a] border-b-2 border-gray-200 dark:border-gray-700 z-10 px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
           className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
@@ -322,7 +322,7 @@ export function ThreadView({ post, deviceId, onBack, onRepost, isReposted }: Thr
       </div>
 
       {/* Reply input */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-[#1a1a1a] border-t-2 border-gray-200 dark:border-gray-700 px-4 py-3 z-50">
+      <div className="safe-bottom fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-[#1a1a1a] border-t-2 border-gray-200 dark:border-gray-700 px-4 py-3 z-50">
         {replyingTo && (
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-xs text-gray-500">Replying to a comment</span>

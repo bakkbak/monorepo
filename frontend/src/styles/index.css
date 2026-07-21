@@ -5,6 +5,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Self-hosted Noto Sans (latin, variable weight 400–700) so the app renders in
+   the intended typeface offline — critical for a native cold start with no
+   connectivity. */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/noto-sans-latin.woff2') format('woff2');
+}
+
 @theme inline {
   --color-background: #ffffff;
   --color-foreground: #111111;
@@ -91,6 +102,22 @@ body:where(.dark *) {
 
 .animate-slide-left {
   animation: slide-left 0.3s ease-out forwards;
+}
+
+/* Safe-area insets for native (notch / home indicator). No-op on the web,
+   where env(safe-area-inset-*) resolves to 0. */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Content must clear the fixed bottom nav (h-16 = 4rem) plus the home
+   indicator. Used on the main scroll container in place of a plain pb-20. */
+.pb-nav-safe {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
 /* Hide scrollbar for horizontal tabs */

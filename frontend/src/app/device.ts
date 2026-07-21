@@ -53,16 +53,14 @@ export async function getOrCreateDeviceId(): Promise<string> {
   const storedFp = await storageGet(FINGERPRINT_KEY);
 
   if (stored && storedFp) {
-    try {
-      const { device_id, banned } = await registerDevice(storedFp);
-      if (banned) throw new Error('Device is banned');
-      await storageSet(DEVICE_ID_KEY, device_id);
-      return device_id;
-    } catch (e: any) {
-      if (e?.message === 'Device is banned') throw e;
-      // Transient error — keep the stored ID rather than wiping it
-      return stored;
-    }
+    // Fast path: we already know who this device is. Return immediately so the
+    // feed can load without waiting on a network round-trip, and refresh the
+    // registration in the background (keeps server-side state fresh and lets a
+    // changed id/ban surface on the next launch).
+    void registerDevice(storedFp)
+      .then(({ device_id }) => storageSet(DEVICE_ID_KEY, device_id))
+      .catch(() => {});
+    return stored;
   }
 
   const fingerprint = await getOrCreateFingerprint();

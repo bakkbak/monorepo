@@ -6,7 +6,7 @@ const DEFAULT_LNG = 77.5946;
 
 export type Location = { lat: number; lng: number };
 
-const DEFAULT_LOCATION: Location = { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
+export const DEFAULT_LOCATION: Location = { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
 
 // On native we use the Capacitor Geolocation plugin (which drives the OS
 // permission prompt); on the web we fall back to the browser API. Either way a

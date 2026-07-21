@@ -1,5 +1,5 @@
 import { MessageCircle, Share2, ArrowUp, ArrowDown, Repeat2, RefreshCw, MoreHorizontal, Flag, X } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import type { Post } from '../utils';
 import { communityEmojis, getCommunityLogo } from '../utils';
 import { votePost, reportPost } from '../api';
@@ -29,7 +29,7 @@ function useScrollReveal() {
   return { ref, visible };
 }
 
-function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Post; deviceId: string | null; onClick: () => void; onRepost?: (post: Post) => void; isReposted?: (postId: string) => boolean }) {
+function PostCardInner({ post, deviceId, onClick, onRepost, isReposted }: { post: Post; deviceId: string | null; onClick: () => void; onRepost?: (post: Post) => void; isReposted?: (postId: string) => boolean }) {
   const [vote, setVote] = useState<'up' | 'down' | null>(null);
   const reposted = isReposted?.(post.id) ?? false;
   const [bouncing, setBouncing] = useState<string | null>(null);
@@ -133,12 +133,16 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
           <div className="px-4 pb-3">
             <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{post.content}</p>
             {post.image_url && (
-              <img
-                src={post.image_url}
-                alt=""
-                className="mt-3 w-full rounded-xl border-2 border-gray-200 object-cover max-h-80"
-                loading="lazy"
-              />
+              // Reserve space with a fixed aspect ratio so the image doesn't
+              // shift layout (CLS) when it finishes loading.
+              <div className="mt-3 w-full aspect-[4/3] max-h-80 rounded-xl border-2 border-gray-200 overflow-hidden bg-gray-100 dark:bg-gray-800">
+                <img
+                  src={post.image_url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
             )}
           </div>
         </div>
@@ -194,6 +198,22 @@ function PostCard({ post, deviceId, onClick, onRepost, isReposted }: { post: Pos
   );
 }
 
+// The 30s feed poll rebuilds the Post[] array (new object refs) even when
+// nothing changed, so reference-equality memo won't help. Compare the fields
+// that actually affect the rendered card; skip the re-render when they match.
+const PostCard = memo(PostCardInner, (prev, next) =>
+  prev.deviceId === next.deviceId &&
+  prev.post.id === next.post.id &&
+  prev.post.content === next.post.content &&
+  prev.post.timestamp === next.post.timestamp &&
+  prev.post.upvotes === next.post.upvotes &&
+  prev.post.downvotes === next.post.downvotes &&
+  prev.post.comments === next.post.comments &&
+  prev.post.reposts === next.post.reposts &&
+  prev.post.image_url === next.post.image_url &&
+  (prev.isReposted?.(prev.post.id) ?? false) === (next.isReposted?.(next.post.id) ?? false),
+);
+
 interface PostFeedProps {
   posts: Post[];
   loading: boolean;
@@ -205,11 +225,32 @@ interface PostFeedProps {
   isReposted?: (postId: string) => boolean;
 }
 
+function PostSkeleton() {
+  return (
+    <div className="bg-white dark:bg-[#1a1a1a] rounded-lg border-2 border-black dark:border-white mx-3 animate-pulse">
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+        <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded" />
+          <div className="h-2.5 w-16 bg-gray-200 dark:bg-gray-800 rounded" />
+        </div>
+      </div>
+      <div className="px-4 pb-4 space-y-2">
+        <div className="h-3 w-full bg-gray-200 dark:bg-gray-800 rounded" />
+        <div className="h-3 w-5/6 bg-gray-200 dark:bg-gray-800 rounded" />
+      </div>
+      <div className="h-11 border-t-2 border-gray-200 dark:border-gray-700" />
+    </div>
+  );
+}
+
 export function PostFeed({ posts, loading, error, deviceId, onPostClick, onRetry, onRepost, isReposted }: PostFeedProps) {
   if (loading && posts.length === 0) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-3 pt-3">
+        {[0, 1, 2, 3].map((i) => (
+          <PostSkeleton key={i} />
+        ))}
       </div>
     );
   }

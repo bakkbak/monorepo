@@ -1,11 +1,26 @@
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
 
 database_url = os.environ["DATABASE_URL"]
 
-engine = create_engine(database_url, poolclass=NullPool)
+# Reuse connections within a warm serverless instance instead of opening a fresh
+# TCP+TLS+auth connection to Neon on every request (the old NullPool did the
+# latter, adding ~100-400ms per request). pool_pre_ping discards connections the
+# pooler dropped between invocations; connect_timeout + statement_timeout make a
+# stalled DB fail fast instead of hanging the function. Pair this with the Neon
+# *pooled* endpoint (-pooler host) in DATABASE_URL for best results.
+engine = create_engine(
+    database_url,
+    pool_size=1,
+    max_overflow=2,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    connect_args={
+        "connect_timeout": 5,
+        "options": "-c statement_timeout=8000",
+    },
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

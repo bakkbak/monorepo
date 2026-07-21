@@ -15,17 +15,52 @@ export function resolveImageUrl(url: string | null | undefined): string | null {
   return url;
 }
 
+const REQUEST_TIMEOUT_MS = 12000;
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
+  const method = (init?.method ?? 'GET').toUpperCase();
+  const isGet = method === 'GET';
+
+  // Fail fast instead of hanging forever on a stalled connection. Compose with
+  // any caller-supplied signal so callers can still cancel (e.g. tab switches).
+  const timeout = new AbortController();
+  const timer = setTimeout(() => timeout.abort(), REQUEST_TIMEOUT_MS);
+  const signal = init?.signal
+    ? anySignal([init.signal, timeout.signal])
+    : timeout.signal;
+
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      ...init,
+      // Let GETs use the HTTP cache (paired with the backend's short s-maxage on
+      // read feeds); keep mutations uncached.
+      cache: isGet ? 'default' : 'no-store',
+      signal,
+      headers: { 'Content-Type': 'application/json', ...init?.headers },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `Request failed: ${res.status}`);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timer);
   }
-  return res.json();
+}
+
+// Small polyfill for AbortSignal.any (not available in all WebView versions):
+// returns a signal that aborts when any input signal aborts.
+function anySignal(signals: AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  for (const s of signals) {
+    if (s.aborted) {
+      controller.abort();
+      break;
+    }
+    s.addEventListener('abort', onAbort, { once: true });
+  }
+  return controller.signal;
 }
 
 // --- Devices ---
@@ -75,13 +110,16 @@ export type FeedPost = {
   image_url?: string | null;
 };
 
-export async function getFeed(params: {
-  device_id: string;
-  lat: number;
-  lng: number;
-  herd_type?: string;
-  herd_id?: string;
-}) {
+export async function getFeed(
+  params: {
+    device_id: string;
+    lat: number;
+    lng: number;
+    herd_type?: string;
+    herd_id?: string;
+  },
+  signal?: AbortSignal,
+) {
   const qs = new URLSearchParams({
     device_id: params.device_id,
     lat: String(params.lat),
@@ -89,7 +127,7 @@ export async function getFeed(params: {
   });
   if (params.herd_type) qs.set('herd_type', params.herd_type);
   if (params.herd_id) qs.set('herd_id', params.herd_id);
-  return request<FeedPost[]>(`/posts/feed?${qs}`);
+  return request<FeedPost[]>(`/posts/feed?${qs}`, { signal });
 }
 
 export async function getTrendingFeed(device_id: string) {

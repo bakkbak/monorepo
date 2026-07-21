@@ -8,8 +8,12 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setFadeOut(true), 1800);
-    const finish = setTimeout(onFinish, 2300);
+    // Brief brand moment that overlaps data loading — not a hard delay. The old
+    // 2.3s floor made every launch feel slow even when data was ready. Feed
+    // fetching runs underneath the splash (App's effects fire regardless), so a
+    // short cover is enough; users can also tap to skip.
+    const timer = setTimeout(() => setFadeOut(true), 500);
+    const finish = setTimeout(onFinish, 800);
     return () => {
       clearTimeout(timer);
       clearTimeout(finish);

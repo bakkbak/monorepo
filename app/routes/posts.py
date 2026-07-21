@@ -202,12 +202,17 @@ def get_feed(
                     p.herd_id,
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                    (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
-                    (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                    COALESCE(cc.n, 0) AS comment_count,
+                    COALESCE(rc.n, 0) AS repost_count,
                     p.image_url
                 FROM posts p
+                LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM comments GROUP BY post_id) cc
+                    ON cc.post_id = p.id
+                LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM reposts GROUP BY post_id) rc
+                    ON rc.post_id = p.id
                 WHERE p.herd_id = :herd_id
                   AND p.is_hidden = FALSE
+                  AND p.created_at > NOW() - INTERVAL '365 days'
                 ORDER BY score DESC
                 LIMIT 50
             """),
@@ -230,14 +235,19 @@ def get_feed(
                 p.herd_id,
                 CAST((p.upvotes - p.downvotes) AS FLOAT) /
                 (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
-                (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                COALESCE(cc.n, 0) AS comment_count,
+                COALESCE(rc.n, 0) AS repost_count,
                 p.image_url
             FROM posts p
             INNER JOIN herd_memberships hm
                 ON p.herd_id = hm.herd_id AND hm.device_id = :device_id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM comments GROUP BY post_id) cc
+                ON cc.post_id = p.id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM reposts GROUP BY post_id) rc
+                ON rc.post_id = p.id
             WHERE p.is_hidden = FALSE
               AND p.herd_id IS NOT NULL
+              AND p.created_at > NOW() - INTERVAL '365 days'
             ORDER BY score DESC
             LIMIT 50
         """),
@@ -262,16 +272,21 @@ def get_feed(
                     p.herd_id,
                     CAST((p.upvotes - p.downvotes) AS FLOAT) /
                     (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                    (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
-                    (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                    COALESCE(cc.n, 0) AS comment_count,
+                    COALESCE(rc.n, 0) AS repost_count,
                     p.image_url
                 FROM posts p
+                LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM comments GROUP BY post_id) cc
+                    ON cc.post_id = p.id
+                LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM reposts GROUP BY post_id) rc
+                    ON rc.post_id = p.id
                 WHERE p.herd_type = 'university'
                   AND (
                       :domain IS NULL
                       OR p.university_domain = :domain
                   )
                   AND p.is_hidden = FALSE
+                  AND p.created_at > NOW() - INTERVAL '365 days'
                 ORDER BY score DESC
                 LIMIT 50
                 """),
@@ -302,16 +317,21 @@ def get_trending(device_id: str, db: Session = Depends(get_db)):
                 p.herd_id,
                 CAST(
                     (p.upvotes - p.downvotes)
-                    + 2 * (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)
-                    + 3 * (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id)
+                    + 2 * COALESCE(cc.n, 0)
+                    + 3 * COALESCE(rc.n, 0)
                 AS FLOAT) /
                 (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2) AS score,
-                (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
-                (SELECT COUNT(*) FROM reposts r WHERE r.post_id = p.id) AS repost_count,
+                COALESCE(cc.n, 0) AS comment_count,
+                COALESCE(rc.n, 0) AS repost_count,
                 p.image_url
             FROM posts p
+            LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM comments GROUP BY post_id) cc
+                ON cc.post_id = p.id
+            LEFT JOIN (SELECT post_id, COUNT(*) AS n FROM reposts GROUP BY post_id) rc
+                ON rc.post_id = p.id
             WHERE p.herd_id = ANY(:herd_ids)
               AND p.is_hidden = FALSE
+              AND p.created_at > NOW() - INTERVAL '365 days'
             ORDER BY score DESC
             LIMIT 50
         """),

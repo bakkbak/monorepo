@@ -7,19 +7,21 @@ database_url = os.environ["DATABASE_URL"]
 # Reuse connections within a warm serverless instance instead of opening a fresh
 # TCP+TLS+auth connection to Neon on every request (the old NullPool did the
 # latter, adding ~100-400ms per request). pool_pre_ping discards connections the
-# pooler dropped between invocations; connect_timeout + statement_timeout make a
-# stalled DB fail fast instead of hanging the function. Pair this with the Neon
-# *pooled* endpoint (-pooler host) in DATABASE_URL for best results.
+# pooler dropped between invocations.
+#
+# IMPORTANT: connect_args must work on BOTH a direct Neon endpoint and the Neon
+# pooler (PgBouncer). `connect_timeout` is a libpq parameter and is safe on both.
+# Do NOT add an `options` startup parameter here (e.g. "-c statement_timeout")
+# — PgBouncer rejects unknown startup parameters, which fails every connection
+# with a 500. (Runaway queries are already bounded by the serverless function
+# timeout.)
 engine = create_engine(
     database_url,
     pool_size=1,
     max_overflow=2,
     pool_pre_ping=True,
     pool_recycle=300,
-    connect_args={
-        "connect_timeout": 5,
-        "options": "-c statement_timeout=8000",
-    },
+    connect_args={"connect_timeout": 5},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

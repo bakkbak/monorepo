@@ -9,7 +9,9 @@ import { TrendingPage } from './components/TrendingPage';
 import { SplashScreen } from './components/SplashScreen';
 import { OnboardingFlow } from './components/OnboardingFlow';
 import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
-import { getOrCreateDeviceId, ONBOARDING_COMPLETE_KEY } from './device';
+import { getOrCreateDeviceId, isOnboardingComplete, setOnboardingComplete } from './device';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { useTheme } from './theme';
 import { getLocation, type Location } from './location';
 import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus, getOnboardingStatus } from './api';
@@ -149,13 +151,13 @@ export default function App() {
       async ([did, loc]) => {
         setDeviceId(did);
         setLocation(loc);
-        if (!localStorage.getItem(ONBOARDING_COMPLETE_KEY)) {
+        if (!(await isOnboardingComplete())) {
           try {
             const { completed } = await getOnboardingStatus(did);
             if (!completed) {
               setShowOnboarding(true);
             } else {
-              localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+              await setOnboardingComplete();
             }
           } catch {
             setShowOnboarding(true);
@@ -236,6 +238,26 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  // Android hardware back button: unwind overlays/tabs before letting the OS
+  // background the app (matching iOS back-swipe semantics as closely as we can).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const sub = CapacitorApp.addListener('backButton', () => {
+      if (composerOpen) {
+        setComposerOpen(false);
+      } else if (viewingPost) {
+        setViewingPost(null);
+      } else if (activeTab !== 'home') {
+        setActiveTab('home');
+      } else {
+        CapacitorApp.exitApp();
+      }
+    });
+    return () => {
+      void sub.then((s) => s.remove());
+    };
+  }, [composerOpen, viewingPost, activeTab]);
+
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
@@ -245,7 +267,7 @@ export default function App() {
       <OnboardingFlow
         deviceId={deviceId}
         onFinish={(firstExperience) => {
-          localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+          void setOnboardingComplete();
           setShowOnboarding(false);
           refreshJoinedHerds();
           if (firstExperience === 'browse_trending') setActiveTab('trending');
@@ -290,11 +312,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-20 max-w-md mx-auto relative">
+    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] pb-nav-safe max-w-md mx-auto relative">
       {/* Header */}
       {activeTab === 'home' && (
         <div
-          className={`bg-yellow-400 border-b-2 border-black sticky top-0 z-10 transition-transform duration-300 ${
+          className={`safe-top bg-yellow-400 border-b-2 border-black sticky top-0 z-10 transition-transform duration-300 ${
             showHeader ? 'translate-y-0' : '-translate-y-full'
           }`}
         >
@@ -363,7 +385,7 @@ export default function App() {
       )}
 
       {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 dark:bg-yellow-400 border-t-2 border-black dark:border-black max-w-md mx-auto z-50">
+      <div className="safe-bottom fixed bottom-0 left-0 right-0 bg-yellow-400 dark:bg-yellow-400 border-t-2 border-black dark:border-black max-w-md mx-auto z-50">
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => setActiveTab('home')}

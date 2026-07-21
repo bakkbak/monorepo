@@ -1,4 +1,19 @@
-const BASE = '/api';
+// On the web this stays relative (same-origin, and the Vite dev proxy forwards
+// `/api` → localhost:8000). Native builds set VITE_API_BASE to an absolute URL
+// because the WebView origin is `capacitor://localhost`, where `/api` 404s.
+const BASE = import.meta.env.VITE_API_BASE ?? '/api';
+
+// The backend stores `image_url` as a relative path (`/api/images/{id}`), which
+// resolves against `capacitor://localhost` in a native WebView and 404s. Prefix
+// the API origin so images load everywhere. No-op on the web (BASE is relative).
+export function resolveImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (BASE.startsWith('http') && url.startsWith('/api/')) {
+    return new URL(BASE).origin + url;
+  }
+  return url;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

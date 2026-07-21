@@ -1,4 +1,4 @@
-import type { FeedPost } from './api';
+import { resolveImageUrl, type FeedPost } from './api';
 
 export type Post = {
   id: string;
@@ -152,6 +152,6 @@ export function feedPostToPost(fp: FeedPost): Post {
     downvotes: fp.downvotes ?? 0,
     comments: fp.comment_count ?? 0,
     reposts: fp.repost_count ?? 0,
-    image_url: fp.image_url ?? null,
+    image_url: resolveImageUrl(fp.image_url),
   };
 }

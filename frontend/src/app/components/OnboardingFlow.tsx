@@ -658,7 +658,7 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#1a1a1a] max-w-md mx-auto relative px-5 pt-2 pb-4">
+    <div className="safe-top safe-bottom min-h-screen bg-white dark:bg-[#1a1a1a] max-w-md mx-auto relative px-5 pt-2 pb-4">
       <ProgressDots current={step as number} total={6} />
 
       {step === 2 && (

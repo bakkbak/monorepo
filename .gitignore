@@ -5,6 +5,9 @@ __pycache__/
 *.pyc
 .env
 .env.*
+# Native build config holds a public API URL, not secrets — keep it tracked so
+# `npm run build:native` works for anyone who clones the repo.
+!frontend/.env.native
 venv/
 .venv/
 *.db

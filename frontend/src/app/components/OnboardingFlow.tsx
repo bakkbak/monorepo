@@ -508,8 +508,9 @@ function FirstExperienceScreen({
   );
 }
 
-function LoadingScreen({ onDone, error, onRetry }: { onDone: () => void; error: string | null; onRetry: () => void }) {
+function LoadingScreen({ onDone, error, onRetry, ready }: { onDone: () => void; error: string | null; onRetry: () => void; ready: boolean }) {
   const [checks, setChecks] = useState<number[]>([]);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const doneRef = useRef(false);
 
   const steps = [
@@ -518,22 +519,30 @@ function LoadingScreen({ onDone, error, onRetry }: { onDone: () => void; error: 
     'Personalizing your feed',
   ];
 
+  // Run the check-in animation and mark when its minimum display time is up.
   useEffect(() => {
     if (error) return;
     const timers = steps.map((_, i) =>
       setTimeout(() => setChecks((prev) => [...prev, i]), 400 + i * 500)
     );
-    const finishTimer = setTimeout(() => {
-      if (!doneRef.current) {
-        doneRef.current = true;
-        onDone();
-      }
-    }, 400 + steps.length * 500 + 300);
+    const minTimer = setTimeout(
+      () => setMinTimeElapsed(true),
+      400 + steps.length * 500 + 300,
+    );
     return () => {
       timers.forEach(clearTimeout);
-      clearTimeout(finishTimer);
+      clearTimeout(minTimer);
     };
   }, [error]);
+
+  // Only advance once BOTH the animation has played out AND the onboarding POST
+  // has committed — otherwise the feed would refresh joined herds before the
+  // memberships exist and the user's circles would appear un-joined.
+  useEffect(() => {
+    if (error || !ready || !minTimeElapsed || doneRef.current) return;
+    doneRef.current = true;
+    onDone();
+  }, [error, ready, minTimeElapsed, onDone]);
 
   return (
     <div className="fixed inset-0 bg-yellow-400 flex flex-col items-center justify-center z-[99] px-6">
@@ -572,6 +581,10 @@ function LoadingScreen({ onDone, error, onRetry }: { onDone: () => void; error: 
 export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>(1);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Gates the loading screen: we only advance into the app once the onboarding
+  // POST (which writes herd_memberships) has actually committed, so the feed's
+  // refreshJoinedHerds() reads the freshly-joined circles rather than racing it.
+  const [submitComplete, setSubmitComplete] = useState(false);
 
   const [university, setUniversity] = useState<string | null>(null);
   const [universityOther, setUniversityOther] = useState('');
@@ -624,6 +637,7 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
   const doSubmit = async () => {
     setStep('loading');
     setSubmitError(null);
+    setSubmitComplete(false);
     try {
       await submitOnboarding({
         device_id: deviceId,
@@ -638,6 +652,7 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
         circle_ids: Array.from(selectedCircles),
         first_experience: firstExperience,
       });
+      setSubmitComplete(true);
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to save');
     }
@@ -651,6 +666,7 @@ export function OnboardingFlow({ deviceId, onFinish }: OnboardingFlowProps) {
     return (
       <LoadingScreen
         error={submitError}
+        ready={submitComplete}
         onRetry={doSubmit}
         onDone={() => onFinish(firstExperience)}
       />

@@ -1,19 +1,31 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Home, Binoculars, User, Plus, Flame } from 'lucide-react';
 import { PostFeed } from './components/PostFeed';
-import { ProfilePage } from './components/ProfilePage';
-import { DiscoverPage } from './components/DiscoverPage';
-import { ThreadView } from './components/ThreadView';
-import { PostComposer } from './components/PostComposer';
-import { TrendingPage } from './components/TrendingPage';
 import { SplashScreen } from './components/SplashScreen';
-import { OnboardingFlow } from './components/OnboardingFlow';
 import { UniversityVerifyPrompt } from './components/UniversityVerifyPrompt';
+
+// Code-split the screens that aren't part of the first (home) paint so they
+// don't bloat the initial bundle. Named exports → map to default for React.lazy.
+const ProfilePage = lazy(() => import('./components/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const DiscoverPage = lazy(() => import('./components/DiscoverPage').then((m) => ({ default: m.DiscoverPage })));
+const ThreadView = lazy(() => import('./components/ThreadView').then((m) => ({ default: m.ThreadView })));
+const PostComposer = lazy(() => import('./components/PostComposer').then((m) => ({ default: m.PostComposer })));
+const TrendingPage = lazy(() => import('./components/TrendingPage').then((m) => ({ default: m.TrendingPage })));
+const OnboardingFlow = lazy(() => import('./components/OnboardingFlow').then((m) => ({ default: m.OnboardingFlow })));
+
+// Fallback shown for the brief moment a lazy screen chunk is fetched.
+function ScreenFallback() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 import { getOrCreateDeviceId, isOnboardingComplete, setOnboardingComplete } from './device';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useTheme } from './theme';
-import { getLocation, type Location } from './location';
+import { getLocation, DEFAULT_LOCATION, type Location } from './location';
 import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus, getOnboardingStatus } from './api';
 import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, isUniversityFeed, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
@@ -29,7 +41,10 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [location, setLocation] = useState<Location | null>(null);
+  // Start with a default location so the feed can load immediately. The feed
+  // query ignores lat/lng entirely; real GPS resolves in the background (used
+  // only when composing a post) and must never gate the first render.
+  const [location, setLocation] = useState<Location>(DEFAULT_LOCATION);
   const [posts, setPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
@@ -38,6 +53,9 @@ export default function App() {
 
   // Per-herd feed cache for instant switching
   const feedCache = useRef<Record<string, Post[]>>({});
+  // Tracks the in-flight feed request so a fast tab switch (A→B→A) can cancel a
+  // stale request instead of letting it overwrite the newer feed.
+  const feedAbort = useRef<AbortController | null>(null);
 
   // Joined herds
   const [joinedHerdIds, setJoinedHerdIds] = useState<string[]>([]);
@@ -147,10 +165,12 @@ export default function App() {
   const isReposted = (postId: string) => repostedIds.has(postId);
 
   useEffect(() => {
-    Promise.all([getOrCreateDeviceId(), getLocation()]).then(
-      async ([did, loc]) => {
+    // Resolve identity as fast as possible — this gates the feed. Do NOT wait on
+    // geolocation (which can block up to 5s on the OS prompt) since the feed
+    // doesn't use coordinates; fetch GPS separately in the background.
+    getOrCreateDeviceId().then(
+      async (did) => {
         setDeviceId(did);
-        setLocation(loc);
         if (!(await isOnboardingComplete())) {
           try {
             const { completed } = await getOnboardingStatus(did);
@@ -166,11 +186,19 @@ export default function App() {
       },
       (err) => setFeedError(err.message),
     );
+    // Background: refine location for post composition; never blocks the feed.
+    getLocation().then(setLocation).catch(() => {});
   }, []);
 
   const loadFeed = useCallback(async () => {
-    if (!deviceId || !location) return;
-    const cached = feedCache.current[selectedFeed];
+    if (!deviceId) return;
+    const feed = selectedFeed;
+    // Cancel any in-flight feed request; keep this one as the current one.
+    feedAbort.current?.abort();
+    const controller = new AbortController();
+    feedAbort.current = controller;
+
+    const cached = feedCache.current[feed];
     if (cached) {
       setPosts(cached);
     } else {
@@ -179,20 +207,26 @@ export default function App() {
     }
     setFeedError(null);
     try {
-      const herdParams = getFeedParams(selectedFeed);
-      const data = await getFeed({
-        device_id: deviceId,
-        lat: location.lat,
-        lng: location.lng,
-        ...herdParams,
-      });
+      const herdParams = getFeedParams(feed);
+      const data = await getFeed(
+        {
+          device_id: deviceId,
+          lat: location.lat,
+          lng: location.lng,
+          ...herdParams,
+        },
+        controller.signal,
+      );
+      // A newer request superseded this one — drop the stale result.
+      if (controller.signal.aborted) return;
       const mapped = data.map(feedPostToPost);
-      feedCache.current[selectedFeed] = mapped;
+      feedCache.current[feed] = mapped;
       setPosts(mapped);
     } catch (err: any) {
+      if (err?.name === 'AbortError') return; // superseded/cancelled, ignore
       if (!cached) setFeedError(err.message);
     } finally {
-      setFeedLoading(false);
+      if (!controller.signal.aborted) setFeedLoading(false);
     }
   }, [deviceId, location, selectedFeed]);
 
@@ -201,7 +235,7 @@ export default function App() {
   }, [loadFeed]);
 
   useEffect(() => {
-    if (!deviceId || !location) return;
+    if (!deviceId) return;
 
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible' && activeTab === 'home') {
@@ -210,8 +244,11 @@ export default function App() {
     }, 30_000);
 
     const handleVisibilityChange = () => {
+      // On foreground, refresh in the background but keep the cached feed on
+      // screen — don't wipe feedCache (that caused a blank flash + full reload
+      // every time the app returned to the foreground, which is constant on
+      // mobile). loadFeed() will overwrite the current tab's cache in place.
       if (document.visibilityState === 'visible' && activeTab === 'home') {
-        feedCache.current = {};
         loadFeed();
       }
     };
@@ -264,27 +301,31 @@ export default function App() {
 
   if (showOnboarding && deviceId) {
     return (
-      <OnboardingFlow
-        deviceId={deviceId}
-        onFinish={(firstExperience) => {
-          void setOnboardingComplete();
-          setShowOnboarding(false);
-          refreshJoinedHerds();
-          if (firstExperience === 'browse_trending') setActiveTab('trending');
-          else if (firstExperience === 'explore_circles') setActiveTab('discover');
-          else if (firstExperience === 'make_first_post') {
-            setActiveTab('home');
-            setComposerOpen(true);
-          }
-        }}
-      />
+      <Suspense fallback={<div className="fixed inset-0 bg-yellow-400" />}>
+        <OnboardingFlow
+          deviceId={deviceId}
+          onFinish={(firstExperience) => {
+            void setOnboardingComplete();
+            setShowOnboarding(false);
+            refreshJoinedHerds();
+            if (firstExperience === 'browse_trending') setActiveTab('trending');
+            else if (firstExperience === 'explore_circles') setActiveTab('discover');
+            else if (firstExperience === 'make_first_post') {
+              setActiveTab('home');
+              setComposerOpen(true);
+            }
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (viewingPost) {
     return (
       <div className="min-h-screen bg-white max-w-md mx-auto relative">
-        <ThreadView post={viewingPost} deviceId={deviceId} onBack={() => setViewingPost(null)} onRepost={handleRepost} isReposted={isReposted} />
+        <Suspense fallback={<ScreenFallback />}>
+          <ThreadView post={viewingPost} deviceId={deviceId} onBack={() => setViewingPost(null)} onRepost={handleRepost} isReposted={isReposted} />
+        </Suspense>
       </div>
     );
   }
@@ -342,7 +383,7 @@ export default function App() {
 
       <div className="pb-4">
         {activeTab === 'home' && (
-          <div key={selectedFeed} className="animate-fade-in">
+          <div className="animate-fade-in">
             {isUniversityFeed(selectedFeed) && !isUniversityVerified && (
               <UniversityVerifyPrompt
                 deviceId={deviceId}
@@ -361,9 +402,11 @@ export default function App() {
             />
           </div>
         )}
-        {activeTab === 'trending' && <TrendingPage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} onRepost={handleRepost} isReposted={isReposted} />}
-        {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
-        {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} theme={theme} onToggleTheme={toggleTheme} />}
+        <Suspense fallback={<ScreenFallback />}>
+          {activeTab === 'trending' && <TrendingPage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} onRepost={handleRepost} isReposted={isReposted} />}
+          {activeTab === 'discover' && <DiscoverPage deviceId={deviceId} onHerdsChanged={refreshJoinedHerds} />}
+          {activeTab === 'profile' && <ProfilePage deviceId={deviceId} onPostClick={(post: Post) => setViewingPost(post)} repostedPosts={repostedPosts} onRepost={handleRepost} isReposted={isReposted} unreadCount={unreadCount} onNotificationsRead={refreshUnreadCount} theme={theme} onToggleTheme={toggleTheme} />}
+        </Suspense>
       </div>
 
       {/* FAB */}
@@ -377,11 +420,13 @@ export default function App() {
       )}
 
       {composerOpen && (
-        <PostComposer
-          onClose={() => setComposerOpen(false)}
-          onPost={handleNewPost}
-          communities={communities}
-        />
+        <Suspense fallback={null}>
+          <PostComposer
+            onClose={() => setComposerOpen(false)}
+            onPost={handleNewPost}
+            communities={communities}
+          />
+        </Suspense>
       )}
 
       {/* Bottom Nav */}

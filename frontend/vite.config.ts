@@ -5,6 +5,18 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split rarely-changing vendor code into its own long-cacheable chunk
+        // so app updates don't re-download React, and the icon set is separate.
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src/app'),

@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
-from .db import init_db
 from .routes import (
     posts,
     devices,
@@ -14,24 +13,37 @@ from .routes import (
     onboarding,
 )
 
+# GET read-feed paths that can tolerate a few seconds of shared-CDN caching.
+# The device_id in the query string keeps caching per-device, and the feed is
+# already eventually-consistent (optimistic UI + 30s polling).
+_CACHEABLE_FEED_PATHS = ("/api/posts/feed", "/api/posts/trending")
 
-class NoCacheMiddleware(BaseHTTPMiddleware):
+
+class CacheHeaderMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         response = await call_next(request)
-        if request.url.path.startswith("/api/") and not request.url.path.startswith(
-            "/api/images/"
-        ):
+        path = request.url.path
+        if not path.startswith("/api/"):
+            return response
+        # Images set their own long-lived immutable cache in the route.
+        if path.startswith("/api/images/"):
+            return response
+        # Short shared-cache window on read feeds so repeat/near-simultaneous
+        # loads are served from Vercel's CDN instead of re-hitting Postgres.
+        if request.method == "GET" and path in _CACHEABLE_FEED_PATHS:
+            response.headers["Cache-Control"] = (
+                "public, s-maxage=15, stale-while-revalidate=60"
+            )
+        else:
             response.headers["Cache-Control"] = "no-store"
         return response
 
 
 app = FastAPI(title="BakBak API")
 
-init_db()
-
-app.add_middleware(NoCacheMiddleware)
+app.add_middleware(CacheHeaderMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

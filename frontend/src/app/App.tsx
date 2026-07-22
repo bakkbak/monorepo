@@ -27,7 +27,7 @@ import { Capacitor } from '@capacitor/core';
 import { useTheme } from './theme';
 import { getLocation, DEFAULT_LOCATION, type Location } from './location';
 import { getFeed, createPost, repostPost, unrepostPost, getMyReposts, getJoinedHerds, joinHerd, getNotifications, getDeviceStatus, getOnboardingStatus } from './api';
-import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, isUniversityFeed, DEFAULT_HERD_IDS, type Post } from './utils';
+import { feedPostToPost, buildFeedOptions, buildCommunities, getFeedParams, getPostParams, isUniversityFeed, getHerdInfoByDisplayName, DEFAULT_HERD_IDS, type Post } from './utils';
 export type { Post } from './utils';
 
 export default function App() {
@@ -390,6 +390,24 @@ export default function App() {
                 onVerified={() => setIsUniversityVerified(true)}
               />
             )}
+            {(() => {
+              // Sidechat-style context banner: shown only for a specific
+              // non-university circle (not "For you", not RVU/OPJ).
+              const info = getHerdInfoByDisplayName(selectedFeed);
+              return info?.description && !info.isUniversityHerd ? (
+                <div className="px-4 pt-3 pb-1 flex items-start gap-3">
+                  <span className="text-2xl leading-none">{info.emoji}</span>
+                  <div>
+                    <h2 className="font-bold text-black dark:text-white leading-tight">
+                      {info.displayName}
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {info.description}
+                    </p>
+                  </div>
+                </div>
+              ) : null;
+            })()}
             <PostFeed
               posts={posts}
               loading={feedLoading}

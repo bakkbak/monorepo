@@ -391,19 +391,25 @@ export default function App() {
               />
             )}
             {(() => {
-              // Sidechat-style context banner: shown only for a specific
-              // non-university circle (not "For you", not RVU/OPJ).
+              // Circle context card: shown only for a specific non-university
+              // circle (not "For you", not RVU/OPJ). Matches the Figma card —
+              // yellow accent bar, emoji tile, large title.
               const info = getHerdInfoByDisplayName(selectedFeed);
               return info?.description && !info.isUniversityHerd ? (
-                <div className="px-4 pt-3 pb-1 flex items-start gap-3">
-                  <span className="text-2xl leading-none">{info.emoji}</span>
-                  <div>
-                    <h2 className="font-bold text-black dark:text-white leading-tight">
-                      {info.displayName}
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {info.description}
-                    </p>
+                <div className="mx-3 mt-3 rounded-2xl border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-[#1a1a1a]">
+                  <div className="h-2.5 bg-yellow-400" />
+                  <div className="flex items-center gap-4 p-4">
+                    <div className="w-16 h-16 rounded-2xl border-2 border-black bg-yellow-400 flex items-center justify-center text-3xl flex-shrink-0">
+                      {info.emoji}
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-2xl font-bold text-black dark:text-white leading-tight">
+                        {info.displayName}
+                      </h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {info.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : null;

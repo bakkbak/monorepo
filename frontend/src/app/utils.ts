@@ -17,27 +17,33 @@ export type HerdInfo = {
   displayName: string;
   emoji: string;
   herdId: string; // backend herd_id
+  description?: string; // short context line (non-university circles only)
   logo?: string;
   isUniversityHerd?: boolean;
 };
 
 export const HERD_REGISTRY: Record<string, HerdInfo> = {
-  'ipl':                { displayName: 'IPL',                emoji: '🏏', herdId: 'ipl' },
-  'nba':                { displayName: 'NBA',                emoji: '🏀', herdId: 'nba' },
-  'premier-league':     { displayName: 'Premier League',     emoji: '⚽', herdId: 'premier-league' },
-  'gaming':             { displayName: 'Gaming',             emoji: '🎮', herdId: 'gaming' },
-  'music':              { displayName: 'Music',              emoji: '🎵', herdId: 'music' },
-  'movies':             { displayName: 'Movies',             emoji: '🎬', herdId: 'movies' },
-  'confessions':        { displayName: 'Confessions',        emoji: '🤫', herdId: 'confessions' },
-  'relationship-advice':{ displayName: 'Relationship Advice',emoji: '💕', herdId: 'relationship-advice' },
-  'meme-central':       { displayName: 'Meme Central',       emoji: '😂', herdId: 'meme-central' },
-  'hot-takes':          { displayName: 'Hot Takes',          emoji: '🔥', herdId: 'hot-takes' },
-  'study-hacks':        { displayName: 'Study Hacks',        emoji: '📚', herdId: 'study-hacks' },
-  'computer-science':   { displayName: 'Computer Science',   emoji: '💻', herdId: 'computer-science' },
-  'business-street':    { displayName: 'Business Street',    emoji: '💰', herdId: 'business-street' },
+  'ipl':                { displayName: 'IPL',                emoji: '🏏', herdId: 'ipl',                 description: 'cricket talk, banter & hot takes' },
+  'nba':                { displayName: 'NBA',                emoji: '🏀', herdId: 'nba',                 description: 'hoops, highlights & hot takes' },
+  'premier-league':     { displayName: 'Premier League',     emoji: '⚽', herdId: 'premier-league',      description: 'footy, transfers & matchday chaos' },
+  'gaming':             { displayName: 'Gaming',             emoji: '🎮', herdId: 'gaming',              description: 'games, setups & the grind' },
+  'music':              { displayName: 'Music',              emoji: '🎵', herdId: 'music',               description: 'new drops, playlists & artist talk' },
+  'movies':             { displayName: 'Movies',             emoji: '🎬', herdId: 'movies',              description: 'films, shows & what to watch next' },
+  'confessions':        { displayName: 'Confessions',        emoji: '🤫', herdId: 'confessions',         description: 'spill it — anonymously' },
+  'relationship-advice':{ displayName: 'Relationship Advice',emoji: '💕', herdId: 'relationship-advice', description: 'love, situationships & the messy in-between' },
+  'meme-central':       { displayName: 'Meme Central',       emoji: '😂', herdId: 'meme-central',        description: 'the funniest stuff on campus' },
+  'hot-takes':          { displayName: 'Hot Takes',          emoji: '🔥', herdId: 'hot-takes',           description: 'unpopular opinions welcome' },
+  'study-hacks':        { displayName: 'Study Hacks',        emoji: '📚', herdId: 'study-hacks',         description: 'tips, notes & surviving finals' },
+  'computer-science':   { displayName: 'Computer Science',   emoji: '💻', herdId: 'computer-science',    description: 'code, internships & CS life' },
+  'business-street':    { displayName: 'Business Street',    emoji: '💰', herdId: 'business-street',     description: 'startups, markets & money moves' },
   'rvu':                { displayName: 'RVU',                emoji: '🎓', herdId: 'rvu', logo: '/herds/rvu.svg', isUniversityHerd: true },
   'opj':                { displayName: 'OPJ',                emoji: '🏫', herdId: 'opj', logo: '/herds/opj.svg', isUniversityHerd: true },
 };
+
+// Resolve a feed's display name (e.g. "Gaming") back to its registry entry.
+export function getHerdInfoByDisplayName(displayName: string): HerdInfo | undefined {
+  return Object.values(HERD_REGISTRY).find((h) => h.displayName === displayName);
+}
 
 // No hardcoded default herds — users get circles from onboarding choices
 export const DEFAULT_HERD_IDS: string[] = [];

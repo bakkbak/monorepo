@@ -107,6 +107,11 @@ export function DiscoverPage({ deviceId, onHerdsChanged }: DiscoverPageProps) {
                 <h3 className="text-lg font-bold text-black dark:text-white truncate">
                   {circle.displayName}
                 </h3>
+                {circle.description && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                    {circle.description}
+                  </p>
+                )}
               </div>
 
               {/* Join Button */}
